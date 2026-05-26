@@ -1,0 +1,3 @@
+Neuro overlay config notes.
+
+This overlay connects OpenHands to LiteLLM, LangGraph, and browser-use. Provider credentials should be entered only in the runtime environment or OpenHands Cloud secrets, never committed to GitHub.
