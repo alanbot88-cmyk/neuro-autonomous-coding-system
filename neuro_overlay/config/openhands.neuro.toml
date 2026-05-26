@@ -1,0 +1,62 @@
+[core]
+workspace_base = "./workspace"
+max_iterations = 500
+default_agent = "CodeActAgent"
+enable_browser = true
+runtime = "docker"
+debug = false
+save_trajectory_path = "./trajectories"
+enable_default_condenser = true
+max_concurrent_conversations = 3
+
+[llm]
+model = "litellm_proxy/neuro-executor"
+base_url = "http://litellm:4000"
+api_key = "$LITELLM_MASTER_KEY"
+temperature = 0.1
+max_output_tokens = 8192
+timeout = 120
+num_retries = 5
+
+[llm.planner]
+model = "litellm_proxy/neuro-planner"
+base_url = "http://litellm:4000"
+api_key = "$LITELLM_MASTER_KEY"
+temperature = 0.2
+max_output_tokens = 8192
+
+[llm.debugger]
+model = "litellm_proxy/neuro-debugger"
+base_url = "http://litellm:4000"
+api_key = "$LITELLM_MASTER_KEY"
+temperature = 0.1
+max_output_tokens = 8192
+
+[llm.condenser]
+model = "litellm_proxy/neuro-condenser"
+base_url = "http://litellm:4000"
+api_key = "$LITELLM_MASTER_KEY"
+temperature = 0.1
+max_output_tokens = 4096
+
+[agent]
+enable_browsing = true
+enable_editor = true
+enable_jupyter = true
+enable_cmd = true
+enable_think = true
+enable_finish = true
+enable_history_truncation = true
+enable_prompt_extensions = true
+
+[condenser]
+type = "llm"
+llm_config = "condenser"
+keep_first = 2
+max_size = 80
+
+[sandbox]
+timeout = 300
+base_container_image = "nikolaik/python-nodejs:python3.12-nodejs22-slim"
+use_host_network = false
+browsergym_eval_env = ""
