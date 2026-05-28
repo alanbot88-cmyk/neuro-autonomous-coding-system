@@ -1,0 +1,18 @@
+# Neuro Autonomous Agent - Dependencies
+# Target: 75-80% on SWE-bench using free APIs
+
+# Core - No GPU required
+groq>=0.4.0
+openai>=1.0.0
+
+# Optional - Enhanced capabilities
+# httpx  # For async HTTP (already in openai)
+# tiktoken  # For token counting
+
+# Testing (optional - for benchmark validation)
+pytest>=7.0.0
+pytest-cov>=4.0.0
+
+# Development
+ruff>=0.1.0
+mypy>=1.0.0
