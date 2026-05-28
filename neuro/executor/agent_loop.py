@@ -1,6 +1,13 @@
 """
 Main Agent Loop - Orchestrates all components for 75-80% performance
 Integrates: Router, Reasoning, Validation, Memory, Skills (259+)
+NOW WITH ECC-INSPIRED COMPONENTS:
+- Task Decomposer (planning)
+- Verification Loop (eval-harness)
+- Continuous Learning (instincts v2)
+- AgentShield (security scanning)
+- Multi-Agent Orchestration
+- Autonomous Loops (self-improvement)
 """
 
 import os
@@ -24,7 +31,16 @@ from neuro.skills import (
     MCPSkill, OpenDesignSkills, AgentMemorySkill, BrowserAutomation,
     invoke_skill, mcp_connect, browse_web, store_memory, recall, 
     get_context as get_memory_context, MemoryType, SKILL_REGISTRY,
-    SkillOrchestrator  # Import from separate file
+    SkillOrchestrator,  # Import from separate file
+    
+    # NEW: ECC-inspired skills
+    VerificationLoop, run_verification,
+    PythonPatternsSkill,
+    ContinuousLearning, get_learning_system,
+    AgentShieldSkill, run_security_scan,
+    MultiAgentOrchestrator, quick_orchestrate,
+    TaskDecomposer, create_plan,
+    AutonomousLoop, run_autonomous_loop,
 )
 
 
@@ -41,7 +57,12 @@ class AgentConfig:
     test_first: bool = True
     use_cot: bool = True
     use_memory: bool = True
-    use_skills: bool = True  # NEW: Enable skills
+    use_skills: bool = True  # Enable skills
+    use_decomposer: bool = True  # NEW: Use task decomposition
+    use_verification: bool = True  # NEW: Use verification loops
+    use_security: bool = True  # NEW: Use security scanning
+    use_orchestration: bool = False  # NEW: Use multi-agent for complex tasks
+    use_autonomous_loop: bool = False  # NEW: Use self-improvement loops
     dry_run: bool = True
     confirm_apply: bool = True
     verbose: bool = True
@@ -70,7 +91,7 @@ class NeuroAgent:
     """
     Main Neuro Autonomous Agent.
     Orchestrates all components for high SWE-bench performance.
-    NOW WITH FULL 259+ SKILL INTEGRATION.
+    NOW WITH FULL 259+ SKILLS + ECC-INSPIRED COMPONENTS.
     """
     
     def __init__(self, config: AgentConfig):
@@ -84,6 +105,38 @@ class NeuroAgent:
         
         # NEW: Initialize skill orchestrator
         self.skill_orchestrator = SkillOrchestrator(verbose=config.verbose) if config.use_skills else None
+        
+        # NEW: ECC-inspired components
+        if config.use_decomposer:
+            self.decomposer = TaskDecomposer()
+        else:
+            self.decomposer = None
+            
+        if config.use_verification:
+            self.verification_loop = VerificationLoop(max_attempts=3)
+        else:
+            self.verification_loop = None
+            
+        if config.use_security:
+            self.security_scanner = AgentShieldSkill()
+        else:
+            self.security_scanner = None
+            
+        if config.use_orchestration:
+            self.orchestrator = MultiAgentOrchestrator()
+        else:
+            self.orchestrator = None
+            
+        if config.use_autonomous_loop:
+            self.autonomous_loop = AutonomousLoop()
+        else:
+            self.autonomous_loop = None
+        
+        # NEW: Continuous learning (always available)
+        self.learning = get_learning_system()
+        
+        # NEW: Python patterns
+        self.python_patterns = PythonPatternsSkill()
         
         self.current_step = 0
         self.history: List[Dict] = []
@@ -127,7 +180,7 @@ class NeuroAgent:
         """
         if self.config.verbose:
             print("=" * 60)
-            print("NEURO AUTONOMOUS AGENT (with 259+ Skills)")
+            print("NEURO AUTONOMOUS AGENT (259+ Skills + ECC Components)")
             print("=" * 60)
             print(f"Goal: {self.config.goal}")
             print(f"Working dir: {self.config.working_dir}")
@@ -135,10 +188,12 @@ class NeuroAgent:
             print(f"Test-first: {self.config.test_first}")
             print(f"COT: {self.config.use_cot}")
             print(f"Skills: {self.config.use_skills}")
+            print(f"Decomposer: {self.config.use_decomposer}")
+            print(f"Security: {self.config.use_security}")
             print("=" * 60)
         
         try:
-            # PHASE 0: SKILL DETECTION (NEW!)
+            # PHASE 0: SKILL DETECTION + PLANNING (ECC)
             if self.skill_orchestrator:
                 if self.config.verbose:
                     print("\n🔍 Detecting relevant skills...")
@@ -146,20 +201,33 @@ class NeuroAgent:
                     "working_dir": self.config.working_dir
                 })
             
+            # NEW: Task Decomposition (ECC's /plan)
+            if self.decomposer and self.config.use_decomposer:
+                if self.config.verbose:
+                    print("\n📋 Creating implementation plan...")
+                decomposition = create_plan(self.config.goal, {"working_dir": self.config.working_dir})
+                if self.config.verbose:
+                    print(f"   Steps: {len(decomposition['steps'])}, Estimated: {decomposition['total_minutes']} min")
+            else:
+                decomposition = None
+            
             # Phase 1: Multi-pass thinking WITH skill enrichment
             thinking_loop = ThinkingLoop(self.router, LoopConfig(max_passes=self.config.max_passes))
             
-            # Build context with skill enrichment
+            # Build context with skill enrichment + learned patterns
             context = {
                 "working_dir": self.config.working_dir,
                 "test_first": self.config.test_first,
                 "similar_tasks": self.similar_context,
                 "active_skills": self.skill_orchestrator.active_skills if self.skill_orchestrator else [],
+                "decomposition": decomposition,  # NEW: Add plan to context
             }
             
-            # NEW: Enrich context with skill-specific information
-            if self.skill_orchestrator:
-                context = self.skill_orchestrator.enrich_context(self.config.goal, context)
+            # NEW: Add learned patterns from continuous learning
+            if self.learning:
+                learned_context = self.learning.get_context_for_task(self.config.goal)
+                if learned_context:
+                    context["learned_patterns"] = learned_context
             
             # Invoke analysis-stage skills
             if self.skill_orchestrator:
@@ -324,12 +392,16 @@ def create_agent(
     model: Optional[str] = None,
     test_first: bool = True,
     use_cot: bool = True,
-    use_skills: bool = True,  # NEW
+    use_skills: bool = True,  # Enable 259+ skills
+    use_decomposer: bool = True,  # NEW: ECC-style task planning
+    use_verification: bool = True,  # NEW: ECC verification loops
+    use_security: bool = True,  # NEW: AgentShield security
+    use_orchestration: bool = False,  # NEW: Multi-agent for complex tasks
     dry_run: bool = True,
     verbose: bool = True,
 ) -> NeuroAgent:
     """
-    Create a new Neuro agent WITH FULL SKILL INTEGRATION.
+    Create a new Neuro agent WITH FULL SKILL INTEGRATION + ECC COMPONENTS.
     
     Usage:
         from neuro.executor.agent_loop import create_agent
@@ -340,6 +412,9 @@ def create_agent(
             test_first=True,
             use_cot=True,
             use_skills=True,  # Enable 259+ skills
+            use_decomposer=True,  # Enable task decomposition (ECC /plan)
+            use_verification=True,  # Enable verification loops
+            use_security=True,  # Enable AgentShield scanning
             dry_run=False,
         )
         
@@ -356,6 +431,10 @@ def create_agent(
         test_first=test_first,
         use_cot=use_cot,
         use_skills=use_skills,
+        use_decomposer=use_decomposer,  # NEW
+        use_verification=use_verification,  # NEW
+        use_security=use_security,  # NEW
+        use_orchestration=use_orchestration,  # NEW
         dry_run=dry_run,
         verbose=verbose,
     )

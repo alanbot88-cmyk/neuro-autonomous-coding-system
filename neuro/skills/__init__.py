@@ -19,6 +19,15 @@ from neuro.skills.browser_automation import BrowserAutomation, BrowserConfig, Br
 from neuro.skills.skill_middleware import SkillMiddleware, get_middleware, set_active_skills, apply_skill_context
 from neuro.skills.skill_orchestrator import SkillOrchestrator
 
+# NEW: ECC-inspired skills
+from neuro.skills.verification_loop import VerificationLoop, VerificationCheckpoint, run_verification
+from neuro.skills.python_patterns import PythonPatternsSkill, PythonPattern
+from neuro.skills.continuous_learning import ContinuousLearning, InstinctStore, get_learning_system
+from neuro.skills.agent_shield import AgentShieldSkill, SecurityFinding, run_security_scan
+from neuro.skills.multi_agent import MultiAgentOrchestrator, SubTask, quick_orchestrate
+from neuro.skills.task_decomposer import TaskDecomposer, ImplementationPlan, create_plan
+from neuro.skills.autonomous_loop import AutonomousLoop, PRLoop, LoopType, run_autonomous_loop
+
 # Lazy imports for heavy skills
 _lazy_imports = {
     "react_three_fiber": "neuro.skills.react_three_fiber.ReactThreeFiberSkill",
@@ -85,6 +94,27 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "browser": BrowserAutomation,
     "browser_automation": BrowserAutomation,
     "playwright": BrowserAutomation,
+    
+    # NEW: ECC-inspired skills
+    "verification_loop": VerificationLoop,
+    "verification": VerificationLoop,
+    "eval": VerificationLoop,
+    "python_patterns": PythonPatternsSkill,
+    "patterns": PythonPatternsSkill,
+    "continuous_learning": ContinuousLearning,
+    "instincts": ContinuousLearning,
+    "learning": ContinuousLearning,
+    "agent_shield": AgentShieldSkill,
+    "security": AgentShieldSkill,
+    "scan": AgentShieldSkill,
+    "multi_agent": MultiAgentOrchestrator,
+    "orchestrate": MultiAgentOrchestrator,
+    "task_decomposer": TaskDecomposer,
+    "plan": TaskDecomposer,
+    "autonomous_loop": AutonomousLoop,
+    "loop": AutonomousLoop,
+    "iterate": AutonomousLoop,
+}
     
     # 3D & Graphics Skills
     "react_three_fiber": None,  # Will be imported lazily
