@@ -1,0 +1,140 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "neuro"
+version = "0.1.0"
+description = "Neuro Autonomous Coding System - Beat Kimi, Manus, Claude at SWE-bench"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Alan Bot", email = "alanbot88@email.com"}
+]
+keywords = [
+    "swe-bench",
+    "autonomous-agent",
+    "ai-coder",
+    "code-generation",
+    "multi-model",
+    "free-ai"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Coding Tools",
+    "Topic :: Artificial Intelligence",
+]
+dependencies = [
+    "groq>=0.4.0",
+    "openai>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+swebench = [
+    "swebench>=4.0.0",
+    "datasets>=2.0.0",
+]
+
+[project.scripts]
+neuro = "neuro.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/alanbot88-cmyk/neuro-autonomous-coding-system"
+Documentation = "https://github.com/alanbot88-cmyk/neuro-autonomous-coding-system#readme"
+Repository = "https://github.com/alanbot88-cmyk/neuro-autonomous-coding-system"
+Issues = "https://github.com/alanbot88-cmyk/neuro-autonomous-coding-system/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["neuro*"]
+
+[tool.setuptools.package-data]
+neuro = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "swebench: marks tests requiring SWE-bench",
+]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = [
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # Pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+    "UP007", # use of | for union (Python 3.10 compatible)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/*" = ["F811", "F401"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+ignore_missing_imports = true
+exclude = ["build", "dist", "*.egg-info"]
+
+[tool.coverage.run]
+source = ["neuro"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/build/*",
+    "*/dist/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]

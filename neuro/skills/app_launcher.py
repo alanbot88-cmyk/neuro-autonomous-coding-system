@@ -29,9 +29,9 @@ class LaunchResult:
     app_type: str
     url: str
     port: int
-    process_id: Optional[int] = None
     message: str
     startup_duration_ms: float
+    process_id: Optional[int] = None
     build_output: str = ""
     error: Optional[str] = None
 

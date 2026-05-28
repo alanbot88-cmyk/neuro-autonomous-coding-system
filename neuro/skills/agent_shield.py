@@ -64,8 +64,8 @@ class AgentShieldSkill:
         "sql_injection": {
             "severity": "high",
             "patterns": [
-                r'execute\([^)]*\+',  # String concatenation in SQL
-                r'cursor\.execute\([^)]*%",  # % formatting
+                r'execute\([^)]+',  # String concatenation in SQL
+                r'cursor\.execute\([^)]+%',  # % formatting
                 r'f"SELECT.*{',  # f-string in SQL
             ],
             "category": "injection",
@@ -75,8 +75,8 @@ class AgentShieldSkill:
         "path_traversal": {
             "severity": "medium",
             "patterns": [
-                r'open\([^)]*\+',  # Path concatenation
-                r'Path\([^)]*\+',  # Pathlib concatenation
+                r'open\([^)]+',  # Path concatenation
+                r'Path\([^)]+',  # Pathlib concatenation
                 r'\.\./',  # Directory traversal
             ],
             "category": "path_security",

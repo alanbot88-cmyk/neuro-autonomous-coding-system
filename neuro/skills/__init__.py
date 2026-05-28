@@ -149,8 +149,7 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "multi_agent_coordinator": AgentSwarmCoordinator,
     "swe_prompts": SWEBenchPrompts,
     "prompts": SWEBenchPrompts,
-}
-    
+
     # 3D & Graphics Skills
     "react_three_fiber": None,  # Will be imported lazily
     "threejs_core": None,
@@ -161,7 +160,7 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "shader": None,
     "draco_performance": None,
     "draco": None,
-    
+
     # Animation Skills
     "gsap_scroll": None,
     "gsap": None,
@@ -171,12 +170,12 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "lenis_scroll": None,
     "lenis": None,
     "smooth_scroll": None,
-    
+
     # Math & Technical Skills
     "vector_math": None,
     "matrix": None,
     "mathematics": None,
-    
+
     # Development Skills
     "component_driven": None,
     "system_prompt": None,
@@ -185,7 +184,7 @@ SKILL_REGISTRY: Dict[str, Any] = {
 
 class SkillManager:
     """Automatic skill loader and invoker for Neuro system"""
-    
+
     def __init__(self, skills_dir: Optional[Path] = None):
         self.skills_dir = skills_dir or Path(".agents/skills")
         self.skills: Dict[str, Skill] = {}

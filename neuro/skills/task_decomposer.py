@@ -194,37 +194,26 @@ class TaskDecomposer:
                     model_hint="planner",
                     dependencies=[f"step_{step_counter-1}"]
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
-                    description="Implement authentication endpoints",
-                    action="code",
-                    size=TaskSize.M,
-                    estimated_minutes=45,
-                    model_hint="code_generator",
-                    dependencies=[f"step_{step_counter-1}"]
-                ),
-                step_counter += 1,
-                TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+1}",
                     description="Write authentication tests",
                     action="test",
                     size=TaskSize.S,
                     estimated_minutes=20,
                     model_hint="tester",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter}"]
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+2}",
                     description="Security review of auth implementation",
                     action="review",
                     size=TaskSize.S,
                     estimated_minutes=20,
                     model_hint="security_reviewer",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter+1}"]
                 ),
             ])
+            step_counter += 3
         
         elif task_type == "api":
             steps.extend([
@@ -236,37 +225,35 @@ class TaskDecomposer:
                     estimated_minutes=30,
                     model_hint="architect"
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+1}",
                     description="Implement API handlers",
                     action="code",
                     size=TaskSize.M,
                     estimated_minutes=60,
                     model_hint="code_generator",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter}"]
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+2}",
                     description="Add API tests",
                     action="test",
                     size=TaskSize.S,
                     estimated_minutes=30,
                     model_hint="tester",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter+1}"]
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+3}",
                     description="Create API documentation",
                     action="code",
                     size=TaskSize.XS,
                     estimated_minutes=15,
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter+2}"]
                 ),
             ])
-        
+            step_counter += 4
+
         elif task_type == "database":
             steps.extend([
                 TaskStep(
@@ -277,28 +264,27 @@ class TaskDecomposer:
                     estimated_minutes=25,
                     model_hint="architect"
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+1}",
                     description="Create migrations",
                     action="code",
                     size=TaskSize.S,
                     estimated_minutes=30,
                     model_hint="code_generator",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter}"]
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+2}",
                     description="Write database tests",
                     action="test",
                     size=TaskSize.S,
                     estimated_minutes=20,
                     model_hint="tester",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter+1}"]
                 ),
             ])
-        
+            step_counter += 3
+
         else:  # General feature
             steps.extend([
                 TaskStep(
@@ -309,28 +295,26 @@ class TaskDecomposer:
                     estimated_minutes=30,
                     model_hint="architect"
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+1}",
                     description="Implement core functionality",
                     action="code",
                     size=TaskSize.M,
                     estimated_minutes=60,
                     model_hint="code_generator",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter}"]
                 ),
-                step_counter += 1,
                 TaskStep(
-                    id=f"step_{step_counter}",
+                    id=f"step_{step_counter+2}",
                     description="Add tests",
                     action="test",
                     size=TaskSize.S,
                     estimated_minutes=30,
                     model_hint="tester",
-                    dependencies=[f"step_{step_counter-1}"]
+                    dependencies=[f"step_{step_counter+1}"]
                 ),
             ])
-        
+            step_counter += 3
         # Final verification step
         steps.append(TaskStep(
             id=f"step_{step_counter}",

@@ -178,17 +178,17 @@ import pytest
 
 class TestIssueFix:
     def test_main_case(self):
-        """Test the main fix."""
+        'Test the main fix.'
         result = function_under_test(input)
         assert result == expected_output
     
     def test_edge_case(self):
-        """Test boundary conditions."""
+        'Test boundary conditions.'
         result = function_under_test(edge_input)
         assert result == expected_edge_output
     
     def test_error_case(self):
-        """Test error handling."""
+        'Test error handling.'
         with pytest.raises(ExpectedException):
             function_under_test(invalid_input)
 ```

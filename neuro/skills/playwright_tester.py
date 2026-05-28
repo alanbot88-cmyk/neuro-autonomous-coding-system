@@ -82,11 +82,11 @@ class PlaywrightTester:
     
     def _ensure_playwright(self) -> bool:
         """Ensure Playwright is installed."""
+        global PLAYWRIGHT_AVAILABLE
         if not PLAYWRIGHT_AVAILABLE:
             try:
                 subprocess.run(["pip", "install", "playwright"], check=True, capture_output=True)
                 subprocess.run(["playwright", "install"], check=True, capture_output=True)
-                global PLAYWRIGHT_AVAILABLE
                 PLAYWRIGHT_AVAILABLE = True
             except Exception:
                 print("Warning: Playwright not available. Install with: pip install playwright")
