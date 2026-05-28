@@ -16,3 +16,10 @@ pytest-cov>=4.0.0
 # Development
 ruff>=0.1.0
 mypy>=1.0.0
+
+# SWE-bench Integration (optional - for benchmark)
+swebench>=4.0.0
+datasets>=2.0.0
+
+# Docker support (optional - for container isolation)
+# docker>=6.0.0

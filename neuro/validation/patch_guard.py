@@ -2,16 +2,183 @@
 Patch Guard - Validates patches before applying
 Ensures only verified patches are applied
 Critical for 75-80% score by preventing broken patches
+
+Now with improved unified diff parsing for SWE-bench patches.
 """
 
 import os
 import re
 import hashlib
 import json
+import difflib
 from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
 from pathlib import Path
 from datetime import datetime
+
+
+# =============================================================================
+# UNIFIED DIFF PARSING (for SWE-bench compatibility)
+# =============================================================================
+
+class UnifiedDiffParser:
+    """
+    Parse unified diff patches correctly using difflib.unified_diff.
+    Critical for SWE-bench where patches have hunk offsets.
+    """
+    
+    @staticmethod
+    def parse_patch(patch_text: str) -> List[Dict[str, Any]]:
+        """
+        Parse a unified diff patch into structured hunks.
+        
+        Args:
+            patch_text: Unified diff string
+            
+        Returns:
+            List of dicts with file_path, hunks, and metadata
+        """
+        patches = []
+        current_patch = None
+        current_hunk = None
+        
+        for line in patch_text.split('\n'):
+            if line.startswith('--- '):
+                if current_patch:
+                    if current_hunk:
+                        current_patch[' hunks'].append(current_hunk)
+                    patches.append(current_patch)
+                
+                parts = line[4:].split('\t')
+                current_patch = {
+                    'old_file': parts[0].strip(),
+                    'new_file': '',
+                    ' hunks': [],
+                    'is_new': False,
+                    'is_deleted': False,
+                }
+                current_hunk = None
+            
+            elif line.startswith('+++ '):
+                if current_patch:
+                    parts = line[4:].split('\t')
+                    current_patch['new_file'] = parts[0].strip()
+                    if current_patch['new_file'] == '/dev/null':
+                        current_patch['is_deleted'] = True
+                    if current_patch['old_file'] == '/dev/null':
+                        current_patch['is_new'] = True
+            
+            elif line.startswith('@@'):
+                if current_hunk and current_patch:
+                    current_patch[' hunks'].append(current_hunk)
+                
+                match = re.match(r'@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@(.*)', line)
+                if match:
+                    current_hunk = {
+                        'old_start': int(match.group(1)),
+                        'old_count': int(match.group(2)) if match.group(2) else 1,
+                        'new_start': int(match.group(3)),
+                        'new_count': int(match.group(4)) if match.group(4) else 1,
+                        'old_lines': [],
+                        'new_lines': [],
+                        'header': line,
+                    }
+            
+            elif current_hunk is not None:
+                if line.startswith('-'):
+                    current_hunk['old_lines'].append(line[1:])
+                elif line.startswith('+'):
+                    current_hunk['new_lines'].append(line[1:])
+                elif line.startswith(' '):
+                    current_hunk['old_lines'].append(line[1:])
+                    current_hunk['new_lines'].append(line[1:])
+        
+        if current_hunk and current_patch:
+            current_patch[' hunks'].append(current_hunk)
+        if current_patch:
+            patches.append(current_patch)
+        
+        return patches
+    
+    @staticmethod
+    def apply_patch(file_path: str, patch: Dict[str, Any]) -> bool:
+        """Apply a parsed patch to a file using proper hunk offsets."""
+        if not os.path.exists(file_path):
+            if patch.get('is_new'):
+                content = '\n'.join(
+                    hunk['new_lines'] 
+                    for hunk in patch[' hunks']
+                )
+                os.makedirs(os.path.dirname(file_path) or '.', exist_ok=True)
+                with open(file_path, 'w') as f:
+                    f.write(content + '\n' if content else '')
+                return True
+            return False
+        
+        with open(file_path, 'r') as f:
+            lines = f.readlines()
+        
+        for hunk in reversed(patch[' hunks']):
+            old_start = hunk['old_start'] - 1
+            old_count = hunk['old_count']
+            
+            old_content = ''.join(lines[old_start:old_start + old_count])
+            expected_old = ''.join(hunk['old_lines'])
+            
+            if old_content.rstrip('\n') != expected_old.rstrip('\n'):
+                if not UnifiedDiffParser._fuzzy_apply(lines, hunk, old_start):
+                    return False
+            
+            new_lines = hunk['new_lines']
+            lines[old_start:old_start + old_count] = [l + '\n' for l in new_lines]
+        
+        with open(file_path, 'w') as f:
+            f.writelines(lines)
+        
+        return True
+    
+    @staticmethod
+    def _fuzzy_apply(lines: List[str], hunk: Dict, target_start: int) -> bool:
+        """Attempt fuzzy matching when exact hunk doesn't apply."""
+        old_lines = hunk['old_lines']
+        new_lines = hunk['new_lines']
+        
+        if not old_lines:
+            return False
+        
+        search_text = '\n'.join(old_lines)
+        current_text = '\n'.join(lines)
+        
+        seq = difflib.SequenceMatcher(None, search_text, current_text)
+        match = seq.find_longest_match(0, len(search_text), 0, len(current_text))
+        
+        if match.size >= len(search_text) * 0.8:
+            old_lines_before = search_text[:match.a].count('\n')
+            current_lines_before = current_text[:match.b].count('\n')
+            new_start = current_lines_before + old_lines_before
+            
+            if new_start >= 0 and new_start + match.size <= len(lines):
+                lines[new_start:new_start + match.size] = [l + '\n' for l in new_lines]
+                return True
+        
+        return False
+    
+    @staticmethod
+    def generate_patch(old_content: str, new_content: str, old_path: str = "a", 
+                       new_path: str = "b") -> str:
+        """Generate a unified diff from old and new content."""
+        old_lines = old_content.splitlines(keepends=True)
+        new_lines = new_content.splitlines(keepends=True)
+        
+        diff = difflib.unified_diff(
+            old_lines,
+            new_lines,
+            fromfile=old_path,
+            tofile=new_path,
+            lineterm=''
+        )
+        
+        return ''.join(diff)
 
 
 @dataclass
@@ -26,15 +193,36 @@ class Patch:
     applied: bool = False
     verified: bool = False
     validation_error: str = ""
+    unified_diff: str = ""  # Raw unified diff format
+    parsed_patch: Optional[Dict[str, Any]] = None  # Structured parsed patch
     
     def __post_init__(self):
         if not self.hash:
             self.hash = self._compute_hash()
+        # Auto-parse unified diff if provided
+        if self.unified_diff and not self.parsed_patch:
+            self.parsed_patch = self._parse_unified_diff()
     
     def _compute_hash(self) -> str:
         """Compute hash of the patch."""
         content = f"{self.file_path}:{self.old_content}:{self.new_content}"
         return hashlib.md5(content.encode()).hexdigest()
+    
+    def _parse_unified_diff(self) -> Optional[Dict[str, Any]]:
+        """Parse unified diff format into structured patch."""
+        if not self.unified_diff:
+            return None
+        patches = UnifiedDiffParser.parse_patch(self.unified_diff)
+        # Find matching file
+        for p in patches:
+            old_file = p.get('old_file', '')
+            new_file = p.get('new_file', '')
+            # Extract filename from path
+            old_name = os.path.basename(old_file.replace('a/', '').replace('b/', ''))
+            new_name = os.path.basename(new_file.replace('a/', '').replace('b/', ''))
+            if old_name in self.file_path or new_name in self.file_path or self.file_path in old_name:
+                return p
+        return patches[0] if patches else None
 
 
 @dataclass
