@@ -17,15 +17,17 @@ class CoTConfig:
     strategy: str = "zero_shot_cot"  # zero_shot_cot, few_shot_cot, auto_cot
 
 
-# COT Prompt Templates
+# COT Prompt Templates (enhanced with 259+ skill awareness)
 COT_PROMPTS = {
-    "zero_shot_cot": """Let me think through this step by step:
+    "zero_shot_cot": """Let me think through this step by step with skill awareness:
 
 1. First, I need to understand the problem...
-2. Then, I should identify what changes are needed...
-3. Next, I'll implement the fix...
+2. Then, I should identify what changes are needed (consider using skills)...
+3. Next, I'll implement the fix (invoke relevant skills)...
 4. After that, I need to verify it works...
 5. Finally, I'll ensure no regressions...
+
+AVAILABLE SKILLS: {skills}
 
 Let me start by analyzing the issue: {goal}
 
@@ -34,10 +36,10 @@ Working through this:
 Step 1 - Understanding:
 {analysis_step1}
 
-Step 2 - Planning:
+Step 2 - Planning (with skill guidance):
 {analysis_step2}
 
-Step 3 - Implementation:
+Step 3 - Implementation (invoke skills as needed):
 {analysis_step3}
 
 Step 4 - Verification:
@@ -49,22 +51,33 @@ Step 5 - Final check:
 Based on this reasoning, my approach is:
 {conclusion}""",
 
-    "analyze_before_code": """Before writing any code, I must understand:
+    "analyze_before_code": """Before writing any code, I must understand AND consider available skills:
+
+SKILL CHECKLIST:
+- Security task? → Use security skill
+- Code quality? → Use code-review, code-simplifier
+- Version control? → Use github/gitlab skills
+- Testing? → Use qa-changes, iterate skills
+- Deployment? → Use docker, kubernetes, vercel
+- Frontend? → Use frontend-design, theme-factory
+
+AVAILABLE SKILLS: {skills}
 
 1. The Issue
    - What is the expected behavior?
    - What is the actual behavior?
    - What error messages exist?
 
-2. The Context
+2. The Context (check for skill relevance)
    - Which file(s) are affected?
    - What functions/modules are involved?
    - Are there related tests?
 
-3. The Solution Path
+3. The Solution Path (which skills to use)
    - What changes are needed?
    - Are there similar patterns in the codebase?
    - What edge cases must be handled?
+   - Should I invoke any skills?
 
 4. Verification
    - How will I test this fix?
@@ -88,12 +101,15 @@ VERIFICATION STRATEGY:
 IMPLEMENTATION:
 {implementation}""",
 
-    "test_driven": """Following test-driven approach:
+    "test_driven": """Following test-driven approach WITH skill integration:
 
 1. READ TEST FIRST - Understand expected behavior
-2. WRITE CODE TO PASS TEST - Implement fix
-3. VERIFY TEST PASSES - Confirm fix works
-4. CHECK NO REGRESSIONS - Ensure nothing else broke
+2. ANALYZE - Consider which skills apply
+3. WRITE CODE TO PASS TEST - Implement fix (invoke skills)
+4. VERIFY TEST PASSES - Confirm fix works
+5. CHECK NO REGRESSIONS - Ensure nothing else broke
+
+AVAILABLE SKILLS: {skills}
 
 GOAL: {goal}
 
@@ -101,34 +117,49 @@ TEST ANALYSIS (Step 1):
 Running relevant tests to understand expected behavior...
 {test_analysis}
 
-CODE IMPLEMENTATION (Step 2):
+SKILL ANALYSIS (Step 2):
+Which skills are relevant for this task?...
+- Security: {has_security}
+- Code Review: {has_code_review}
+- Testing: {has_testing}
+- DevOps: {has_devops}
+
+CODE IMPLEMENTATION (Step 3):
 Writing code that passes the test...
 {implementation}
 
-VERIFICATION (Step 3):
+VERIFICATION (Step 4):
 Test result: {test_result}
 
-REGRESSION CHECK (Step 4):
+REGRESSION CHECK (Step 5):
 Checking other tests and functionality...
 {regression_check}
 
 FINAL VERDICT: {verdict}""",
 
-    "debug_reflect": """When debugging, I must:
+    "debug_reflect": """When debugging, I must (with skill awareness):
 
 1. READ THE ERROR carefully
 2. FIND THE ROOT CAUSE (not symptoms)
-3. PLAN THE FIX (not trial-and-error)
-4. IMPLEMENT CAREFULLY
-5. VERIFY THE FIX
-6. REFLECT ON LESSONS
+3. CHECK RELEVANT SKILLS (security? code-review?)
+4. PLAN THE FIX (not trial-and-error)
+5. IMPLEMENT CAREFULLY (invoke skills)
+6. VERIFY THE FIX
+7. REFLECT ON LESSONS (store in memory)
+
+AVAILABLE SKILLS: {skills}
 
 ERROR: {error}
+
+SKILL RELEVANCE CHECK:
+- Use security skill if auth/vulnerability issue
+- Use code-review for code quality issues
+- Use iterate for CI/testing issues
 
 ROOT CAUSE ANALYSIS:
 {root_cause}
 
-FIX PLAN:
+FIX PLAN (with skill invocation):
 {fix_plan}
 
 IMPLEMENTATION:
@@ -137,7 +168,7 @@ IMPLEMENTATION:
 VERIFICATION:
 {verification}
 
-LESSONS LEARNED:
+LESSONS LEARNED (for memory):
 {lessons}""",
 }
 
@@ -154,31 +185,49 @@ class ChainOfThought:
     
     def wrap_with_cot(self, goal: str, context: Optional[str] = None) -> str:
         """
-        Wrap a goal with chain-of-thought prompting.
+        Wrap a goal with chain-of-thought prompting WITH skill integration.
         
         Args:
             goal: The original task goal
-            context: Optional context (code, errors, etc.)
+            context: Optional context (code, errors, etc.) or dict with skills
             
         Returns:
-            Goal wrapped with CoT prompting
+            Goal wrapped with CoT prompting including skill awareness
         """
         if not self.config.enabled:
             return goal
         
         template = COT_PROMPTS.get(self.config.strategy, COT_PROMPTS["zero_shot_cot"])
         
-        # Fill in the placeholders
+        # Extract skills from context if available
+        skills = ""
+        if isinstance(context, dict):
+            active_skills = context.get("active_skills", [])
+            if active_skills:
+                skills = ", ".join(active_skills[:10])  # Limit to top 10
+            else:
+                skills = "code-review, security, github, docker, iterate, jupyter"
+            # Extract other context
+            context_str = context.get("code_context", "") or context.get("context", "") or "Will discover through code analysis"
+        elif context:
+            context_str = str(context)
+            skills = "code-review, security, github, docker, iterate, jupyter"
+        else:
+            context_str = "Will discover through code analysis"
+            skills = "code-review, security, github, docker, iterate, jupyter"
+        
+        # Fill in the placeholders including new skill-aware variables
         wrapped = template.format(
             goal=goal,
-            analysis_step1=self._analyze_step1(goal, context),
-            analysis_step2=self._analyze_step2(goal, context),
-            analysis_step3=self._analyze_step3(goal, context),
-            analysis_step4=self._analyze_step4(goal, context),
-            analysis_step5=self._analyze_step5(goal, context),
+            skills=skills,
+            analysis_step1=self._analyze_step1(goal, context_str),
+            analysis_step2=self._analyze_step2(goal, context_str),
+            analysis_step3=self._analyze_step3(goal, context_str),
+            analysis_step4=self._analyze_step4(goal, context_str),
+            analysis_step5=self._analyze_step5(goal, context_str),
             conclusion=self._conclude(goal),
             issue=self._get_issue(goal),
-            context=self._get_context(context) if context else "Will discover through code analysis",
+            context=context_str,
             plan=self._get_plan(goal),
             verification=self._get_verification(goal),
             implementation=self._get_implementation(),
@@ -190,6 +239,11 @@ class ChainOfThought:
             root_cause=self._get_root_cause(),
             fix_plan=self._get_fix_plan(),
             lessons=self._get_lessons(),
+            # New skill-aware variables
+            has_security="security" in skills.lower(),
+            has_code_review="code-review" in skills.lower(),
+            has_testing="test" in skills.lower(),
+            has_devops="docker" in skills.lower() or "kubernetes" in skills.lower(),
         )
         
         return wrapped

@@ -1,6 +1,6 @@
 """
 Main Agent Loop - Orchestrates all components for 75-80% performance
-Integrates: Router, Reasoning, Validation, Memory
+Integrates: Router, Reasoning, Validation, Memory, Skills (259+)
 """
 
 import os
@@ -18,6 +18,15 @@ from neuro.validation.test_runner import TestRunner
 from neuro.validation.patch_guard import PatchGuard
 from neuro.memory.task_store import TaskStore
 
+# IMPORT ALL SKILLS FOR INTEGRATION
+from neuro.skills import (
+    SkillAutomation, SkillTrigger, SkillTriggerType,
+    MCPSkill, OpenDesignSkills, AgentMemorySkill, BrowserAutomation,
+    invoke_skill, mcp_connect, browse_web, store_memory, recall, 
+    get_context as get_memory_context, MemoryType, SKILL_REGISTRY,
+    SkillOrchestrator  # Import from separate file
+)
+
 
 @dataclass
 class AgentConfig:
@@ -32,6 +41,7 @@ class AgentConfig:
     test_first: bool = True
     use_cot: bool = True
     use_memory: bool = True
+    use_skills: bool = True  # NEW: Enable skills
     dry_run: bool = True
     confirm_apply: bool = True
     verbose: bool = True
@@ -53,12 +63,14 @@ class AgentResult:
     validation_passed: bool = False
     test_results: Dict = field(default_factory=dict)
     metadata: Dict = field(default_factory=dict)
+    skills_used: List[str] = field(default_factory=list)  # NEW: Track skills
 
 
 class NeuroAgent:
     """
     Main Neuro Autonomous Agent.
     Orchestrates all components for high SWE-bench performance.
+    NOW WITH FULL 259+ SKILL INTEGRATION.
     """
     
     def __init__(self, config: AgentConfig):
@@ -70,60 +82,90 @@ class NeuroAgent:
         self.patch_guard = PatchGuard(config.working_dir, dry_run=config.dry_run)
         self.memory = TaskStore() if config.use_memory else None
         
+        # NEW: Initialize skill orchestrator
+        self.skill_orchestrator = SkillOrchestrator(verbose=config.verbose) if config.use_skills else None
+        
         self.current_step = 0
         self.history: List[Dict] = []
         self.start_time = time.time()
         
-        # Get similar past tasks for context
+        # Get similar past tasks for context (including skill memory)
         self.similar_context = self._get_similar_context()
     
     def _get_similar_context(self) -> str:
-        """Get context from similar past tasks."""
-        if not self.memory:
-            return ""
+        """Get context from similar past tasks and skill memory."""
+        context_parts = []
         
-        try:
-            tasks = self.memory.get_similar(self.config.goal, limit=3)
-            if not tasks:
-                return ""
-            
-            context = "\n\nSimilar past tasks:\n"
-            for task in tasks:
-                context += f"- {task.goal[:100]}... (status: {task.status})\n"
-                if task.error:
-                    context += f"  Error: {task.error[:100]}\n"
-            
-            return context
-        except:
-            return ""
+        # Memory from past tasks
+        if self.memory:
+            try:
+                tasks = self.memory.get_similar(self.config.goal, limit=3)
+                if tasks:
+                    context_parts.append("Past task history:")
+                    for task in tasks:
+                        context_parts.append(f"- {task.goal[:100]}... (status: {task.status})")
+            except:
+                pass
+        
+        # NEW: Also get context from skill-based memory
+        if self.config.use_skills:
+            try:
+                skill_mem = get_memory_context(self.config.goal)
+                if skill_mem:
+                    context_parts.append(f"\nRelevant skill memory:\n{skill_mem}")
+            except:
+                pass
+        
+        return "\n".join(context_parts) if context_parts else ""
     
     def run(self) -> AgentResult:
         """
-        Run the agent to complete the goal.
+        Run the agent to complete the goal WITH FULL SKILL INTEGRATION.
         
         Returns:
             AgentResult with execution details
         """
         if self.config.verbose:
             print("=" * 60)
-            print("NEURO AUTONOMOUS AGENT")
+            print("NEURO AUTONOMOUS AGENT (with 259+ Skills)")
             print("=" * 60)
             print(f"Goal: {self.config.goal}")
             print(f"Working dir: {self.config.working_dir}")
             print(f"Max steps: {self.config.max_steps}")
             print(f"Test-first: {self.config.test_first}")
             print(f"COT: {self.config.use_cot}")
+            print(f"Skills: {self.config.use_skills}")
             print("=" * 60)
         
         try:
-            # Phase 1: Multi-pass thinking
+            # PHASE 0: SKILL DETECTION (NEW!)
+            if self.skill_orchestrator:
+                if self.config.verbose:
+                    print("\n🔍 Detecting relevant skills...")
+                self.skill_orchestrator.detect_skills(self.config.goal, {
+                    "working_dir": self.config.working_dir
+                })
+            
+            # Phase 1: Multi-pass thinking WITH skill enrichment
             thinking_loop = ThinkingLoop(self.router, LoopConfig(max_passes=self.config.max_passes))
             
+            # Build context with skill enrichment
             context = {
                 "working_dir": self.config.working_dir,
                 "test_first": self.config.test_first,
                 "similar_tasks": self.similar_context,
+                "active_skills": self.skill_orchestrator.active_skills if self.skill_orchestrator else [],
             }
+            
+            # NEW: Enrich context with skill-specific information
+            if self.skill_orchestrator:
+                context = self.skill_orchestrator.enrich_context(self.config.goal, context)
+            
+            # Invoke analysis-stage skills
+            if self.skill_orchestrator:
+                analysis_results = self.skill_orchestrator.invoke_skills_for_stage("analysis", context)
+                if analysis_results and self.config.verbose:
+                    print(f"📊 Analysis skills: {list(analysis_results.keys())}")
             
             thinking_result = thinking_loop.run(
                 goal=self.config.goal,
@@ -137,12 +179,18 @@ class NeuroAgent:
                 print(f"\n✓ Thinking complete ({passes_used} passes)")
                 print(f"Convergence: {thinking_result['convergence_score']:.2f}")
             
-            # Phase 2: Validation
+            # Phase 2: Validation WITH skill invocation
             validation_passed = False
             
             if self.config.test_first:
                 if self.config.verbose:
                     print("\n📋 Running validation tests...")
+                
+                # NEW: Invoke testing-stage skills before running tests
+                if self.skill_orchestrator:
+                    test_skills = self.skill_orchestrator.invoke_skills_for_stage("testing", solution)
+                    if test_skills and self.config.verbose:
+                        print(f"🧪 Testing skills: {list(test_skills.keys())}")
                 
                 # Run relevant tests
                 test_result = self.test_runner.run_pytest(timeout=300)
@@ -169,6 +217,12 @@ class NeuroAgent:
                 if self.config.verbose:
                     print("\n🔧 Applying verified patches...")
                 
+                # NEW: Invoke deployment skills before applying
+                if self.skill_orchestrator:
+                    deploy_skills = self.skill_orchestrator.invoke_skills_for_stage("deployment", files_changed)
+                    if deploy_skills and self.config.verbose:
+                        print(f"🚀 Deployment skills: {list(deploy_skills.keys())}")
+                
                 results = self.patch_guard.apply_verified_patches()
                 files_changed = [r["file"] for r in results["applied"]]
                 
@@ -178,7 +232,7 @@ class NeuroAgent:
                 if self.config.verbose:
                     print("\n🔍 Dry run - no changes applied")
             
-            # Record in memory
+            # Record in memory INCLUDING skill learning
             duration_ms = (time.time() - self.start_time) * 1000
             
             if self.memory:
@@ -195,6 +249,14 @@ class NeuroAgent:
                 except:
                     pass
             
+            # NEW: Store skill learning
+            if self.skill_orchestrator:
+                self.skill_orchestrator.learn_from_task(
+                    self.config.goal, 
+                    validation_passed,
+                    {"files_changed": files_changed}
+                )
+            
             return AgentResult(
                 success=validation_passed,
                 goal=self.config.goal,
@@ -206,6 +268,7 @@ class NeuroAgent:
                 validation_passed=validation_passed,
                 test_results=self.config.test_results,
                 model_used=self.config.model or "auto",
+                skills_used=self.skill_orchestrator.active_skills if self.skill_orchestrator else [],
             )
             
         except Exception as e:
@@ -224,6 +287,14 @@ class NeuroAgent:
                 except:
                     pass
             
+            # NEW: Store failure in skill memory too
+            if self.skill_orchestrator:
+                self.skill_orchestrator.learn_from_task(
+                    self.config.goal,
+                    False,
+                    {"error": str(e)}
+                )
+            
             return AgentResult(
                 success=False,
                 goal=self.config.goal,
@@ -232,6 +303,7 @@ class NeuroAgent:
                 passes_used=0,
                 duration_ms=duration_ms,
                 error=str(e),
+                skills_used=self.skill_orchestrator.active_skills if self.skill_orchestrator else [],
             )
     
     def get_history(self) -> List[Dict]:
@@ -240,7 +312,8 @@ class NeuroAgent:
     
     def get_thinking_summary(self) -> str:
         """Get summary of thinking process."""
-        return f"Steps: {self.current_step}, Duration: {(time.time() - self.start_time):.1f}s"
+        skill_info = f", Skills: {len(self.skill_orchestrator.active_skills)}" if self.skill_orchestrator else ""
+        return f"Steps: {self.current_step}, Duration: {(time.time() - self.start_time):.1f}s{skill_info}"
 
 
 def create_agent(
@@ -251,11 +324,12 @@ def create_agent(
     model: Optional[str] = None,
     test_first: bool = True,
     use_cot: bool = True,
+    use_skills: bool = True,  # NEW
     dry_run: bool = True,
     verbose: bool = True,
 ) -> NeuroAgent:
     """
-    Create a new Neuro agent.
+    Create a new Neuro agent WITH FULL SKILL INTEGRATION.
     
     Usage:
         from neuro.executor.agent_loop import create_agent
@@ -265,11 +339,13 @@ def create_agent(
             working_dir="/path/to/project",
             test_first=True,
             use_cot=True,
+            use_skills=True,  # Enable 259+ skills
             dry_run=False,
         )
         
         result = agent.run()
         print(f"Success: {result.success}")
+        print(f"Skills used: {result.skills_used}")
     """
     config = AgentConfig(
         goal=goal,
@@ -279,6 +355,7 @@ def create_agent(
         model=model,
         test_first=test_first,
         use_cot=use_cot,
+        use_skills=use_skills,
         dry_run=dry_run,
         verbose=verbose,
     )
@@ -288,17 +365,19 @@ def create_agent(
 
 def run_goal(goal: str, **kwargs) -> AgentResult:
     """
-    Quick function to run a goal.
+    Quick function to run a goal WITH SKILL INTEGRATION.
     
     Usage:
         from neuro.executor.agent_loop import run_goal
         
         result = run_goal(
             "Fix the bug in main.py",
-            working_dir="/path/to/project"
+            working_dir="/path/to/project",
+            use_skills=True
         )
         
         print(result.success)
+        print(f"Skills used: {result.skills_used}")
     """
     agent = create_agent(goal, **kwargs)
     return agent.run()

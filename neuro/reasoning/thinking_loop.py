@@ -159,10 +159,15 @@ class ThinkingLoop:
         goal: str,
         context: Dict[str, Any],
     ) -> str:
-        """Create the prompt for this pass."""
+        """Create the prompt for this pass WITH skill enrichment."""
         
         # Base prompt with context
         base_prompt = f"Task: {goal}\n\n"
+        
+        # NEW: Include active skills context
+        if context.get("active_skills"):
+            skills_list = ", ".join(context["active_skills"])
+            base_prompt += f"🎯 Available skills: {skills_list}\n\n"
         
         if context.get("code_context"):
             base_prompt += f"Code context:\n{context['code_context'][:2000]}\n\n"
@@ -172,6 +177,14 @@ class ThinkingLoop:
         
         if context.get("validation_error"):
             base_prompt += f"Previous validation error:\n{context['validation_error']}\n\n"
+        
+        # NEW: Include skill hints from orchestrator
+        if context.get("skill_hints"):
+            base_prompt += f"Skill guidance:\n{context['skill_hints']}\n\n"
+        
+        # NEW: Include memory context from swarmvault
+        if context.get("memory_context"):
+            base_prompt += f"Relevant memory:\n{context['memory_context'][:1000]}\n\n"
         
         if self.passes and pass_num > 1:
             base_prompt += f"Previous attempts:\n"
@@ -262,15 +275,33 @@ Provide final status and summary.
             return f"Execution error: {str(e)}"
     
     def _get_system_prompt(self) -> str:
-        """Get system prompt for thinking."""
-        return """You are Neuro, an expert software engineering AI.
+        """Get system prompt for thinking WITH skill awareness."""
+        return """You are Neuro, an expert software engineering AI with access to 259+ skills.
 
-You think carefully and methodically:
+SKILL SYSTEM:
+- You have access to specialized skills for different tasks
+- Available skill categories:
+  * Code Quality: code-review, code-simplifier, add-javadoc, security
+  * Version Control: github, gitlab, bitbucket, iterate
+  * DevOps: docker, kubernetes, vercel, azure-devops
+  * Data/ML: jupyter, spark-version-upgrade, datadog
+  * Frontend: frontend-design, theme-factory
+  * Communication: slack, discord, notion, linear
+  * Agent Memory: Learn from past experiences
+
+THINKING PROCESS:
 1. Analyze the problem thoroughly
-2. Plan your approach
-3. Implement carefully
+2. Plan your approach (consider using relevant skills)
+3. Implement carefully (invoke skills as needed)
 4. Verify your work
 5. Learn from mistakes
+
+When working:
+- Consider which skills could help at each stage
+- Use code-review for quality checks
+- Use security skill for auth/vulnerability tasks
+- Use github skill for version control tasks
+- Use docker/kubernetes for deployment tasks
 
 Be precise, thorough, and honest about uncertainties."""
     

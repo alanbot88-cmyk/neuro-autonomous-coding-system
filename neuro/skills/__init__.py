@@ -16,6 +16,8 @@ from neuro.skills.mcp_integration import MCPSkill, MCPConfig, mcp_invoke
 from neuro.skills.open_design_skills import OpenDesignSkills, OpenSkill, SkillCategory
 from neuro.skills.agent_memory import SwarmVault, AgentMemorySkill, MemoryType, remember, recall, get_context
 from neuro.skills.browser_automation import BrowserAutomation, BrowserConfig, BrowserTask, BrowserType
+from neuro.skills.skill_middleware import SkillMiddleware, get_middleware, set_active_skills, apply_skill_context
+from neuro.skills.skill_orchestrator import SkillOrchestrator
 
 @dataclass
 class Skill:

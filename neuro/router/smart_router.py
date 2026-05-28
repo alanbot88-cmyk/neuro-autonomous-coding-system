@@ -1,6 +1,7 @@
 """
 Smart Router - Rotates across multiple FREE API providers
 Ensures 75-80% performance via intelligent model selection
+NOW WITH SKILL MIDDLEWARE INTEGRATION
 """
 
 import os
@@ -10,6 +11,13 @@ from typing import Optional, List, Dict, Any
 from dataclasses import dataclass, field
 from enum import Enum
 import threading
+
+# Import skill middleware
+try:
+    from neuro.skills.skill_middleware import SkillMiddleware, get_middleware, set_active_skills
+    MIDDLEWARE_AVAILABLE = True
+except ImportError:
+    MIDDLEWARE_AVAILABLE = False
 
 
 class Provider(Enum):
@@ -48,6 +56,7 @@ class SmartRouter:
     """
     Intelligent router that rotates across multiple FREE API providers.
     Ensures best model selection and automatic failover.
+    NOW WITH SKILL MIDDLEWARE INTEGRATION for 259+ skills.
     """
     
     # Provider configurations
@@ -114,6 +123,8 @@ class SmartRouter:
         self.stats = RouterStats()
         self.cooldowns: Dict[str, float] = {}
         self._local = threading.local()
+        # NEW: Initialize skill middleware
+        self.middleware = get_middleware() if MIDDLEWARE_AVAILABLE else None
     
     def _get_api_key(self, provider: Provider) -> Optional[str]:
         """Get API key from environment."""
@@ -380,19 +391,28 @@ class SmartRouter:
         return available
     
     def complete(self, messages: List[Dict], model: Optional[str] = None, 
-                 preferred_provider: Optional[Provider] = None, **kwargs) -> Dict[str, Any]:
+                 preferred_provider: Optional[Provider] = None, 
+                 skills: Optional[List[str]] = None,  # NEW: skills parameter
+                 **kwargs) -> Dict[str, Any]:
         """
-        Complete a request with smart provider selection.
+        Complete a request with smart provider selection AND skill integration.
         
         Args:
             messages: Chat messages
             model: Preferred model (optional, will auto-select if not provided)
             preferred_provider: Provider preference (optional)
+            skills: Active skills for middleware (optional)
             **kwargs: Additional API parameters
             
         Returns:
             Dict with content, provider, model, usage info
         """
+        # NEW: Apply skill middleware pre-processing
+        if MIDDLEWARE_AVAILABLE and self.middleware:
+            if skills:
+                self.middleware.set_skills(skills)
+            messages = self.middleware.preprocess(messages)
+        
         # Get available providers
         available = self._get_available_providers()
         if not available:
@@ -431,6 +451,9 @@ class SmartRouter:
                 continue
             
             if "error" not in result:
+                # NEW: Apply skill middleware post-processing
+                if MIDDLEWARE_AVAILABLE and self.middleware:
+                    result = self.middleware.postprocess(result)
                 return result
             
             # Try next provider on failure
