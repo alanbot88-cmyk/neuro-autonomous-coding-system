@@ -116,6 +116,7 @@ class Provider(Enum):
 
 PROVIDER_MODELS = {
     # Groq - Fast inference, good for routing/classifier tasks
+    # FROM YOUR INSTRUCTIONS: llama-3.1-8b-instant, llama-3.3-70b-versatile, qwen/qwen3-32b, openai/gpt-oss-120b, moonshotai/kimi-k2-instruct
     Provider.GROQ: [
         "llama-3.1-8b-instant",
         "llama-3.3-70b-versatile",
@@ -124,7 +125,8 @@ PROVIDER_MODELS = {
         "moonshotai/kimi-k2-instruct",
     ],
     
-    # Gemini - Best for planning, architecture, validation
+    # Gemini API - Best for planning, architecture, validation
+    # FROM YOUR INSTRUCTIONS: gemini-2.5-pro, gemini-2.5-flash, gemini-2.5-flash-lite, gemini-3-flash-preview, gemini-3.1-flash-lite, gemini-embedding-001
     Provider.GEMINI: [
         "gemini-2.5-pro",
         "gemini-2.5-flash",
@@ -135,13 +137,17 @@ PROVIDER_MODELS = {
     ],
     
     # OpenRouter FREE - Best for coding, reasoning, agentic tasks
+    # FROM YOUR INSTRUCTIONS: openrouter/free, openrouter/owl-alpha, qwen/qwen3-coder:free, deepseek/deepseek-v4-flash:free,
+    # nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free, poolside/laguna-m.1:free, poolside/laguna-xs.2:free,
+    # baidu/cobuddy:free, google/gemma-4-31b-it:free, google/gemma-4-26b-a4b-it:free,
+    # meta-llama/llama-3.3-70b-instruct:free, meta-llama/llama-3.2-3b-instruct:free,
+    # openai/gpt-oss-120b:free, liquid/lfm-2.5-1.2b-thinking:free, z-ai/glm-4.5-air:free
+    # NOTE: deepseek/deepseek-chat used in roles but may be SambaNova or paid OpenRouter
     Provider.OPENROUTER: [
-        # FREE models (no cost!)
         "openrouter/free",
         "openrouter/owl-alpha",
         "qwen/qwen3-coder:free",
         "deepseek/deepseek-v4-flash:free",
-        "deepseek/deepseek-chat:free",
         "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
         "poolside/laguna-m.1:free",
         "poolside/laguna-xs.2:free",
@@ -153,9 +159,12 @@ PROVIDER_MODELS = {
         "openai/gpt-oss-120b:free",
         "liquid/lfm-2.5-1.2b-thinking:free",
         "z-ai/glm-4.5-air:free",
+        # Additional models used in role assignments (may be available on OpenRouter):
+        "deepseek/deepseek-chat",
     ],
     
     # SambaNova - Serious fallback, backend, planning
+    # FROM YOUR INSTRUCTIONS: deepseek-v3.1, deepseek-v3.2, gemma-3-12b-it, gpt-oss-120b, llama-4-maverick-17b-128e-instruct, meta-llama-3.3-70b-instruct, minimax-m2.7
     Provider.SAMBANOVA: [
         "deepseek-v3.1",
         "deepseek-v3.2",
@@ -167,6 +176,7 @@ PROVIDER_MODELS = {
     ],
     
     # Cerebras - Fast reasoning, agent loops
+    # FROM YOUR INSTRUCTIONS: llama-3.3-70b, llama-3.1-8b, qwen-3-32b, qwen-3-235b, gpt-oss-120b
     Provider.CEREBRAS: [
         "llama-3.3-70b",
         "llama-3.1-8b",
@@ -176,17 +186,18 @@ PROVIDER_MODELS = {
     ],
     
     # Cloudflare - Edge tools, embeddings, ASR, vision
+    # FROM YOUR INSTRUCTIONS: kimi-k2.6, glm-4.7-flash, gpt-oss-120b, llama-4-scout, gemma models, BGE embedding models, Whisper/ASR models
     Provider.CLOUDFLARE: [
         "kimi-k2.6",
         "glm-4.7-flash",
         "gpt-oss-120b",
         "llama-4-scout",
-        "gemma-models",
-        "BGE-embedding-models",
-        "Whisper-ASR-models",
+        "@cf/meta/llama-3-70b-instruct-fp8-fast",  # Workers AI format
+        "@cf/mistral/mistral-7b-instruct-v0.2",  # Workers AI format
     ],
     
     # HuggingFace - Niche fallback, embeddings, ASR, vision
+    # FROM YOUR INSTRUCTIONS: BGE/E5 embedding models, Whisper ASR models, image/vision specialist models, small open instruct models
     Provider.HUGGINGFACE: [
         "BGE/E5-embedding-models",
         "Whisper-ASR-models",
