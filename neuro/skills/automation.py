@@ -1,6 +1,6 @@
 """
 Neuro Skill Automation System
-Automatically triggers skills based on code analysis and task patterns
+Automatically triggers skills, plugins, and integrations based on code analysis and task patterns
 """
 
 import re
@@ -21,9 +21,17 @@ class SkillTrigger:
     pattern: str
     skill_names: List[str]
 
+# Available directories for skills
+SKILL_DIRECTORIES = [
+    ".agents/skills/",      # Core skills (40+ skills)
+    ".agents/plugins/",     # Specialized plugins (10+ plugins)
+    ".agents/integrations/", # External integrations
+]
+
 class SkillAutomation:
     """
     Skill automation that auto-triggers based on code patterns
+    Includes: skills, plugins, integrations
     """
     
     # Define automation triggers - automatically activated when patterns match
@@ -34,7 +42,7 @@ class SkillAutomation:
         
         # Security scanning
         SkillTrigger(SkillTriggerType.KEYWORD, r"security|vulnerability|auth|token|secret|password",
-                     ["security"]),
+                     ["security", "vulnerability-remediation"]),
         
         # Code quality
         SkillTrigger(SkillTriggerType.KEYWORD, r"refactor|simplify|clean\s+up|optimize",

@@ -8,12 +8,11 @@ An intelligent multi-model routing agent system with automatic skill integration
 - **Chain-of-Thought Reasoning**: Multi-pass thinking with error correction
 - **Patch Guards**: Only applies verified, non-breaking changes
 - **Memory System**: Learns from past failures
-- **Automatic Skill Integration**: 40+ built-in skills that auto-trigger based on context
+- **Automatic Skill Integration**: 40+ skills + 10+ plugins auto-triggered based on context
 
-## Available Skills
+## Available Skills & Plugins
 
-The system includes automatic integration for 40+ skills:
-
+### Skills (40+)
 | Category | Skills |
 |----------|--------|
 | **Version Control** | github, gitlab, bitbucket, github-pr-review, iterate |
@@ -24,6 +23,20 @@ The system includes automatic integration for 40+ skills:
 | **Communication** | slack-channel-monitor, discord, notion, linear |
 | **Agent SDK** | openhands-sdk, agent-sdk-builder, agent-creator |
 | **Meta** | add-skill, agent-memory, skill-creator, release-notes |
+
+### Plugins (10+)
+| Plugin | Purpose |
+|--------|---------|
+| city-weather | Weather API integration |
+| cobol-modernization | Legacy COBOL code modernization |
+| magic-test | Intelligent test generation |
+| migration-scoring | Migration analysis and scoring |
+| onboarding | Project onboarding assistance |
+| openhands | OpenHands integration |
+| pr-review | Automated PR review |
+| qa-changes | QA testing automation |
+| release-notes | Changelog generation |
+| vulnerability-remediation | Security vulnerability fixes |
 
 ## Usage
 
