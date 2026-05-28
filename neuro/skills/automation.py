@@ -119,6 +119,38 @@ class SkillAutomation:
         # NEW: Browser Automation (Playwright)
         SkillTrigger(SkillTriggerType.KEYWORD, r"browser|playwright|web|scrape|crawl|navigate|click|type",
                      ["browser_automation", "playwright"]),
+        
+        # 3D & Graphics Skills
+        SkillTrigger(SkillTriggerType.KEYWORD, r"react-three-fiber|r3f|@react-three|react 3d|react three fiber|react 3d",
+                     ["react_three_fiber"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"three\.js|threejs|webgl|webgpu",
+                     ["threejs_core", "threejs", "webgl"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"spline|bezier|curve|nurbs|vector path",
+                     ["spline_design"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"glsl|shader|vertex|fragment|gpu programming",
+                     ["glsl_shaders", "shader"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"draco|compress|optimize|glb|gltf",
+                     ["draco_performance", "draco"]),
+        
+        # Animation Skills
+        SkillTrigger(SkillTriggerType.KEYWORD, r"gsap|scrolltrigger|tween|timeline",
+                     ["gsap_scroll", "gsap"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"framer-motion|framer|layout animation|animatepresence",
+                     ["framer_motion", "framer"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"lenis|smooth scroll|momentum",
+                     ["lenis_scroll", "lenis"]),
+        
+        # Math & Technical Skills
+        SkillTrigger(SkillTriggerType.KEYWORD, r"vector|matrix|quaternion|rotation|transform|math",
+                     ["vector_math", "matrix"]),
+        
+        # Development Skills
+        SkillTrigger(SkillTriggerType.KEYWORD, r"storybook|atomic|component|composition|design system",
+                     ["component_driven"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"system prompt|prompt engineering|llm|chain of thought",
+                     ["system_prompt"]),
+        SkillTrigger(SkillTriggerType.KEYWORD, r"asset|mock|fixture|test data|cdn",
+                     ["asset_mapping"]),
     ]
     
     @classmethod

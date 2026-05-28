@@ -19,6 +19,43 @@ from neuro.skills.browser_automation import BrowserAutomation, BrowserConfig, Br
 from neuro.skills.skill_middleware import SkillMiddleware, get_middleware, set_active_skills, apply_skill_context
 from neuro.skills.skill_orchestrator import SkillOrchestrator
 
+# Lazy imports for heavy skills
+_lazy_imports = {
+    "react_three_fiber": "neuro.skills.react_three_fiber.ReactThreeFiberSkill",
+    "threejs_core": "neuro.skills.threejs_webgl.ThreeJSCoreSkill",
+    "threejs": "neuro.skills.threejs_webgl.ThreeJSCoreSkill",
+    "webgl": "neuro.skills.threejs_webgl.ThreeJSCoreSkill",
+    "spline_design": "neuro.skills.spline_design.SplineDesignSkill",
+    "glsl_shaders": "neuro.skills.glsl_shaders.GLSLShaderSkill",
+    "shader": "neuro.skills.glsl_shaders.GLSLShaderSkill",
+    "draco_performance": "neuro.skills.draco_performance.DracoPerformanceSkill",
+    "draco": "neuro.skills.draco_performance.DracoPerformanceSkill",
+    "gsap_scroll": "neuro.skills.gsap_scroll.GSAPScrollSkill",
+    "gsap": "neuro.skills.gsap_scroll.GSAPScrollSkill",
+    "scrolltrigger": "neuro.skills.gsap_scroll.GSAPScrollSkill",
+    "framer_motion": "neuro.skills.framer_motion.FramerMotionSkill",
+    "framer": "neuro.skills.framer_motion.FramerMotionSkill",
+    "lenis_scroll": "neuro.skills.lenis_scroll.LenisSmoothScrollSkill",
+    "lenis": "neuro.skills.lenis_scroll.LenisSmoothScrollSkill",
+    "smooth_scroll": "neuro.skills.lenis_scroll.LenisSmoothScrollSkill",
+    "vector_math": "neuro.skills.vector_math.VectorMathSkill",
+    "matrix": "neuro.skills.vector_math.VectorMathSkill",
+    "mathematics": "neuro.skills.vector_math.VectorMathSkill",
+    "component_driven": "neuro.skills.component_driven.ComponentDrivenSkill",
+    "system_prompt": "neuro.skills.system_prompt.SystemPromptScaffoldSkill",
+    "asset_mapping": "neuro.skills.asset_mapping.AssetMappingSkill",
+}
+
+def _lazy_get_skill(name: str):
+    """Lazily import and return a skill class."""
+    import importlib
+    if name in _lazy_imports:
+        module_path = _lazy_imports[name]
+        module_name, class_name = module_path.rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        return getattr(module, class_name)
+    return None
+
 @dataclass
 class Skill:
     name: str
@@ -36,6 +73,7 @@ class SkillInvocation:
 
 # Skill registry for quick lookup
 SKILL_REGISTRY: Dict[str, Any] = {
+    # Core skills
     "automation": SkillAutomation,
     "mcp": MCPSkill,
     "mcp_integration": MCPSkill,
@@ -47,6 +85,37 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "browser": BrowserAutomation,
     "browser_automation": BrowserAutomation,
     "playwright": BrowserAutomation,
+    
+    # 3D & Graphics Skills
+    "react_three_fiber": None,  # Will be imported lazily
+    "threejs_core": None,
+    "threejs": None,
+    "webgl": None,
+    "spline_design": None,
+    "glsl_shaders": None,
+    "shader": None,
+    "draco_performance": None,
+    "draco": None,
+    
+    # Animation Skills
+    "gsap_scroll": None,
+    "gsap": None,
+    "scrolltrigger": None,
+    "framer_motion": None,
+    "framer": None,
+    "lenis_scroll": None,
+    "lenis": None,
+    "smooth_scroll": None,
+    
+    # Math & Technical Skills
+    "vector_math": None,
+    "matrix": None,
+    "mathematics": None,
+    
+    # Development Skills
+    "component_driven": None,
+    "system_prompt": None,
+    "asset_mapping": None,
 }
 
 class SkillManager:
