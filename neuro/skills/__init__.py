@@ -7,8 +7,15 @@ import os
 import re
 import json
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass, field
+
+# Import all skill modules
+from neuro.skills.automation import SkillAutomation, SkillTrigger, SkillTriggerType
+from neuro.skills.mcp_integration import MCPSkill, MCPConfig, mcp_invoke
+from neuro.skills.open_design_skills import OpenDesignSkills, OpenSkill, SkillCategory
+from neuro.skills.agent_memory import SwarmVault, AgentMemorySkill, MemoryType, remember, recall, get_context
+from neuro.skills.browser_automation import BrowserAutomation, BrowserConfig, BrowserTask, BrowserType
 
 @dataclass
 class Skill:
@@ -24,6 +31,21 @@ class SkillInvocation:
     trigger_used: str
     context: Dict[str, Any]
     result: Optional[str] = None
+
+# Skill registry for quick lookup
+SKILL_REGISTRY: Dict[str, Any] = {
+    "automation": SkillAutomation,
+    "mcp": MCPSkill,
+    "mcp_integration": MCPSkill,
+    "open_design_skills": OpenDesignSkills,
+    "open_skills": OpenDesignSkills,
+    "agent_memory": AgentMemorySkill,
+    "swarmvault": SwarmVault,
+    "memory": AgentMemorySkill,
+    "browser": BrowserAutomation,
+    "browser_automation": BrowserAutomation,
+    "playwright": BrowserAutomation,
+}
 
 class SkillManager:
     """Automatic skill loader and invoker for Neuro system"""
@@ -110,6 +132,11 @@ class SkillManager:
                 "code-simplifier": ["simplify", "refactor", "clean"],
                 "security": ["security", "vulnerability", "auth"],
                 "release-notes": ["changelog", "release notes"],
+                # New skills
+                "mcp": ["mcp", "model context", "ollama", "lm studio", "provider"],
+                "open_skills": ["skills", "openhands", "plugin", "extension"],
+                "agent_memory": ["memory", "remember", "learn", "context", "vault"],
+                "browser": ["browser", "playwright", "web", "scrape", "navigate", "click"],
             }
             
             skill_keywords = keywords_map.get(skill.name, [])
@@ -159,3 +186,38 @@ def get_skill_manager() -> SkillManager:
 def auto_skills(task: str, context: Dict[str, Any] = None) -> List[SkillInvocation]:
     """Auto-detect and invoke skills for a task"""
     return get_skill_manager().auto_invoke(task, context)
+
+def invoke_skill(skill_name: str, task: str, context: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """
+    Invoke a specific skill by name
+    Supports all registered skills including new additions:
+    - mcp, mcp_integration: Model Context Protocol integration
+    - open_design_skills: OpenHands 259+ skills catalog
+    - agent_memory, swarmvault: Persistent memory system
+    - browser, browser_automation, playwright: Browser automation
+    """
+    if skill_name in SKILL_REGISTRY:
+        skill_class = SKILL_REGISTRY[skill_name]
+        if hasattr(skill_class, 'invoke'):
+            return skill_class.invoke(task, context)
+        return {"error": f"Skill {skill_name} does not have an invoke method"}
+    
+    # Fallback to auto-detection
+    return {"auto_triggered": auto_skills(task, context)}
+
+# Convenience functions for new skills
+def mcp_connect(provider: str = "ollama", **kwargs) -> Dict[str, Any]:
+    """Quick MCP connection"""
+    return mcp_invoke("connect", provider=provider, **kwargs)
+
+def browse_web(task: str, **kwargs) -> Dict[str, Any]:
+    """Quick browser automation"""
+    return BrowserAutomation.invoke(task, kwargs if kwargs else None)
+
+def store_memory(content: str, **kwargs) -> Any:
+    """Quick memory storage"""
+    return remember(content, **kwargs)
+
+def search_memory(query: str, **kwargs) -> List:
+    """Quick memory recall"""
+    return recall(query, **kwargs)

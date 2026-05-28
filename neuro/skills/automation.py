@@ -103,6 +103,22 @@ class SkillAutomation:
         # SDK/Agent development
         SkillTrigger(SkillTriggerType.KEYWORD, r"sdk|agent|openhands|llm",
                      ["openhands-sdk", "agent-sdk-builder", "agent-creator"]),
+        
+        # NEW: MCP Integration (swarmclaw)
+        SkillTrigger(SkillTriggerType.KEYWORD, r"mcp|model\s+context|ollama|lm\s+studio|provider",
+                     ["mcp_integration", "swarmclaw"]),
+        
+        # NEW: Open Design Skills (259+ skills)
+        SkillTrigger(SkillTriggerType.KEYWORD, r"skill|plugin|extension|capability|openhands",
+                     ["open_design_skills", "add-skill", "skill-creator"]),
+        
+        # NEW: Agent Memory (swarmvault)
+        SkillTrigger(SkillTriggerType.KEYWORD, r"memory|remember|learn|context|knowledge|persist|forget",
+                     ["agent_memory", "swarmvault"]),
+        
+        # NEW: Browser Automation (Playwright)
+        SkillTrigger(SkillTriggerType.KEYWORD, r"browser|playwright|web|scrape|crawl|navigate|click|type",
+                     ["browser_automation", "playwright"]),
     ]
     
     @classmethod
