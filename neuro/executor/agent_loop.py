@@ -49,6 +49,20 @@ from neuro.skills import (
     AppLauncher, launch_app,
 )
 
+# NEW: Advanced optimizations for 80%+ scores
+try:
+    from neuro.executor.optimized_agent import (
+        ModelEnsemble,
+        TestVoting,
+        SemanticPatchValidator,
+        IntelligentErrorAnalyzer,
+        ReflectionLoop,
+        ContextManager,
+    )
+    OPTIMIZATIONS_AVAILABLE = True
+except ImportError:
+    OPTIMIZATIONS_AVAILABLE = False
+
 
 @dataclass
 class AgentConfig:
@@ -67,12 +81,19 @@ class AgentConfig:
     use_decomposer: bool = True  # ECC-style task planning
     use_verification: bool = True  # ECC verification loops
     use_security: bool = True  # AgentShield security
-    use_orchestration: bool = False  # Multi-agent for complex tasks
+    use_orchestration: bool = True  # ✅ Multi-agent ENABLED (critical for 80%+)
     # NEW: Shell Executor & Self-Healing
     use_shell_executor: bool = True  # Execute shell commands
     use_auto_fix: bool = True  # Auto-fix errors
     use_playwright_test: bool = True  # Test UI/apps
     use_app_launcher: bool = True  # Launch apps/servers
+    # NEW: Advanced optimizations for 80%+ scores
+    use_test_voting: bool = True  # Run tests 3x for reliability
+    use_ensemble_voting: bool = True  # Multiple models vote
+    use_reflection_loop: bool = True  # Learn from failures
+    use_semantic_validation: bool = True  # Semantic patch comparison
+    test_votes: int = 3  # Number of test votes
+    ensemble_models: int = 3  # Number of ensemble models
     dry_run: bool = True
     confirm_apply: bool = True
     verbose: bool = True
@@ -169,9 +190,26 @@ class NeuroAgent:
         else:
             self.app_launcher = None
         
+        # NEW: Initialize advanced optimization components for 80%+
+        if OPTIMIZATIONS_AVAILABLE:
+            self.model_ensemble = ModelEnsemble(self.router) if config.use_ensemble_voting else None
+            self.test_voting = TestVoting(self.test_runner) if config.use_test_voting else None
+            self.semantic_validator = SemanticPatchValidator() if config.use_semantic_validation else None
+            self.error_analyzer = IntelligentErrorAnalyzer(self.router) if config.use_auto_fix else None
+            self.reflection = ReflectionLoop(self.router) if config.use_reflection_loop else None
+            self.context_manager = ContextManager(self.router)
+        else:
+            self.model_ensemble = None
+            self.test_voting = None
+            self.semantic_validator = None
+            self.error_analyzer = None
+            self.reflection = None
+            self.context_manager = None
+        
         self.current_step = 0
         self.history: List[Dict] = []
         self.start_time = time.time()
+        self.attempts: List[Dict] = []
         
         # Get similar past tasks for context (including skill memory)
         self.similar_context = self._get_similar_context()
