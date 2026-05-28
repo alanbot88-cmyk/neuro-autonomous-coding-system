@@ -28,6 +28,12 @@ from neuro.skills.multi_agent import MultiAgentOrchestrator, SubTask, quick_orch
 from neuro.skills.task_decomposer import TaskDecomposer, ImplementationPlan, create_plan
 from neuro.skills.autonomous_loop import AutonomousLoop, PRLoop, LoopType, run_autonomous_loop
 
+# NEW: Shell Executor & Self-Healing skills
+from neuro.skills.shell_executor import ShellExecutor, ExecutionResult, ShellError, quick_execute
+from neuro.skills.playwright_tester import PlaywrightTester, AppTestReport, test_created_app
+from neuro.skills.auto_fix_loop import AutoFixLoop, AutoFixConfig, AutoFixResult, quick_fix
+from neuro.skills.app_launcher import AppLauncher, LaunchResult, launch_app, stop_app
+
 # Lazy imports for heavy skills
 _lazy_imports = {
     "react_three_fiber": "neuro.skills.react_three_fiber.ReactThreeFiberSkill",
@@ -114,6 +120,21 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "autonomous_loop": AutonomousLoop,
     "loop": AutonomousLoop,
     "iterate": AutonomousLoop,
+    
+    # NEW: Shell Executor & Self-Healing
+    "shell_executor": ShellExecutor,
+    "shell": ShellExecutor,
+    "bash": ShellExecutor,
+    "execute": ShellExecutor,
+    "playwright_tester": PlaywrightTester,
+    "playwright": PlaywrightTester,
+    "test_app": PlaywrightTester,
+    "auto_fix": AutoFixLoop,
+    "fix_loop": AutoFixLoop,
+    "self_heal": AutoFixLoop,
+    "app_launcher": AppLauncher,
+    "launch": AppLauncher,
+    "start": AppLauncher,
 }
     
     # 3D & Graphics Skills

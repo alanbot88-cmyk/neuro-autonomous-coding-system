@@ -41,6 +41,12 @@ from neuro.skills import (
     MultiAgentOrchestrator, quick_orchestrate,
     TaskDecomposer, create_plan,
     AutonomousLoop, run_autonomous_loop,
+    
+    # NEW: Shell Executor & Self-Healing
+    ShellExecutor, quick_execute,
+    PlaywrightTester, test_created_app,
+    AutoFixLoop, AutoFixConfig, quick_fix,
+    AppLauncher, launch_app,
 )
 
 
@@ -58,11 +64,15 @@ class AgentConfig:
     use_cot: bool = True
     use_memory: bool = True
     use_skills: bool = True  # Enable skills
-    use_decomposer: bool = True  # NEW: Use task decomposition
-    use_verification: bool = True  # NEW: Use verification loops
-    use_security: bool = True  # NEW: Use security scanning
-    use_orchestration: bool = False  # NEW: Use multi-agent for complex tasks
-    use_autonomous_loop: bool = False  # NEW: Use self-improvement loops
+    use_decomposer: bool = True  # ECC-style task planning
+    use_verification: bool = True  # ECC verification loops
+    use_security: bool = True  # AgentShield security
+    use_orchestration: bool = False  # Multi-agent for complex tasks
+    # NEW: Shell Executor & Self-Healing
+    use_shell_executor: bool = True  # Execute shell commands
+    use_auto_fix: bool = True  # Auto-fix errors
+    use_playwright_test: bool = True  # Test UI/apps
+    use_app_launcher: bool = True  # Launch apps/servers
     dry_run: bool = True
     confirm_apply: bool = True
     verbose: bool = True
@@ -137,6 +147,27 @@ class NeuroAgent:
         
         # NEW: Python patterns
         self.python_patterns = PythonPatternsSkill()
+        
+        # NEW: Shell Executor & Self-Healing
+        if config.use_shell_executor:
+            self.shell_executor = ShellExecutor(working_dir=config.working_dir)
+        else:
+            self.shell_executor = None
+            
+        if config.use_auto_fix:
+            self.auto_fix_loop = AutoFixLoop()
+        else:
+            self.auto_fix_loop = None
+            
+        if config.use_playwright_test:
+            self.playwright_tester = PlaywrightTester()
+        else:
+            self.playwright_tester = None
+            
+        if config.use_app_launcher:
+            self.app_launcher = AppLauncher()
+        else:
+            self.app_launcher = None
         
         self.current_step = 0
         self.history: List[Dict] = []
