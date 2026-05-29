@@ -18,6 +18,7 @@ from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from collections import defaultdict
+from neuro.skills.skill_middleware import register_skill
 
 
 @dataclass

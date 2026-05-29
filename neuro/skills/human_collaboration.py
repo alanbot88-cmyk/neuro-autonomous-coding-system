@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from uuid import uuid4
+from neuro.skills.skill_middleware import register_skill
 
 
 class FeedbackType(Enum):
@@ -46,7 +47,6 @@ class Checkpoint:
     checkpoint_id: str
     name: str
     description: str
-    created_at: str
     awaiting_response: bool = False
     response: Optional[HumanFeedback] = None
     approved: bool = False
@@ -57,10 +57,10 @@ class CollaborationSession:
     """Active collaboration session"""
     session_id: str
     task_description: str
+    created_at: str
     checkpoints: List[Checkpoint] = field(default_factory=list)
     human_approved: bool = True  # Requires human approval
     feedback_history: List[HumanFeedback] = field(default_factory=list)
-    created_at: str
     status: str = "active"
 
 

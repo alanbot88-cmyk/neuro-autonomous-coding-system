@@ -172,3 +172,52 @@ def clear_skills():
 def apply_skill_context(messages: List[Dict]) -> List[Dict]:
     """Quick function to apply skill context to messages."""
     return _middleware.preprocess(messages)
+
+
+def register_skill(name: str, description: str = None, category: str = None):
+    """
+    Decorator to register a skill with the middleware.
+    
+    Usage:
+        @register_skill("deep_research", "Automated research workflow", category="research")
+        def deep_research(...):
+            ...
+    """
+    def decorator(func):
+        func._skill_name = name
+        func._skill_description = description or func.__doc__ or name
+        func._skill_category = category or "general"
+        func._skill_registered = True
+        return func
+    return decorator
+
+
+def get_registered_skills() -> List[Dict[str, Any]]:
+    """Get all skills registered with @register_skill decorator."""
+    skills = []
+    import neuro.skills
+    for attr_name in dir(neuro.skills):
+        try:
+            attr = getattr(neuro.skills, attr_name)
+            if callable(attr) and getattr(attr, '_skill_registered', False):
+                skills.append({
+                    'name': getattr(attr, '_skill_name', attr_name),
+                    'description': getattr(attr, '_skill_description', ''),
+                    'category': getattr(attr, '_skill_category', 'general'),
+                    'func': attr
+                })
+        except Exception:
+            pass
+    return skills
+
+
+# Export everything for convenience
+__all__ = [
+    'SkillMiddleware',
+    'get_middleware',
+    'set_active_skills',
+    'clear_skills',
+    'apply_skill_context',
+    'register_skill',
+    'get_registered_skills',
+]

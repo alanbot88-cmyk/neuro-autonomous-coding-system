@@ -20,6 +20,7 @@ from datetime import datetime
 from pathlib import Path
 from enum import Enum
 import asyncio
+from neuro.skills.skill_middleware import register_skill
 
 
 class ProgressStatus(Enum):

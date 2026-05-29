@@ -14,6 +14,7 @@ from datetime import datetime
 from tavily import TavilyClient
 
 from neuro.skills.skill_middleware import register_skill
+from neuro.skills.skill_middleware import register_skill
 
 
 @dataclass

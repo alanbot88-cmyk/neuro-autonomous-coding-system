@@ -12,6 +12,7 @@ import re
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
 from pathlib import Path
+from neuro.skills.skill_middleware import register_skill
 
 
 @dataclass
