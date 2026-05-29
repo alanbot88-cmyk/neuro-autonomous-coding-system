@@ -1,26 +1,25 @@
 """
 🧠 NEURO ULTIMATE - COMPLETE MODEL REGISTRY (LOCKED)
 =====================================================
-50 FREE API MODELS - ALL PERMANENTLY LOCKED 🔒
+56 FREE API MODELS - ALL PERMANENTLY LOCKED 🔒
 
-⚠️  WARNING: ALL 50 MODELS ARE LOCKED AND PERMANENT!
+⚠️  WARNING: ALL 56 MODELS ARE LOCKED AND PERMANENT!
 ⚠️  DO NOT MODIFY, ADD, OR REMOVE ANY MODEL WITHOUT USER REQUEST!
 ⚠️  THIS FILE IS THE SOURCE OF TRUTH FOR ALL MODEL CONFIGURATIONS.
 
 Last Updated: 2026-05-29
-Status: 🔒 LOCKED - ALL 50 MODELS PERMANENT
+Status: 🔒 LOCKED - ALL 56 MODELS PERMANENT
 
 API PROVIDERS (User's API Keys - ALL FREE):
 - GEMINI_API_KEY: Google AI Studio (11 models)
-- GROQ_API_KEY: Groq (7 models)
+- GROQ_API_KEY: Groq (14 models) ⭐ NEW MODELS ADDED
 - OPENROUTER_API_KEY: OpenRouter (19 models)
 - TOGETHER_API_KEY: Together AI (5 models)
 - COHERE_API_KEY: Cohere (2 models)
 - HF_TOKEN: HuggingFace (3 models)
 - CLOUDFLARE_API_TOKEN: Cloudflare (2 models)
-- Additional routes (1 model)
 
-TOTAL: 50 LOCKED MODELS
+TOTAL: 56 LOCKED MODELS
 """
 
 from typing import Dict, List, Optional, Callable
@@ -737,18 +736,99 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
         fallback_models=["openrouter-llama-3.3-70b"]
     ),
     
-    # Perplexity
-    "perplexity-llama-3.1-70b": ModelInfo(
-        id="llama-3.1-70b-instruct",
-        provider=ModelProvider.OPENROUTER,
-        name="Llama 3.1 70B (Perplexity)",
-        context_window=128_000,
-        strengths=["reasoning", "coding", "research"],
-        rate_limits="Varies",
+    # =========================================================================
+    # 🔒 NEW GROQ MODELS (From Groq Docs - Added 2026-05-29) 🔒
+    # =========================================================================
+    
+    "groq-gpt-oss-120b": ModelInfo(
+        id="openai/gpt-oss-120b",
+        provider=ModelProvider.GROQ,
+        name="GPT OSS 120B (Groq)",
+        context_window=131_072,
+        strengths=["coding", "reasoning", "large_model", "120b", "fast_500_tps"],
+        rate_limits="250K TPM, 1K RPM",
         cost="FREE",
-        api_endpoint="https://openrouter.ai/api/v1/chat/completions",
-        api_key_env="OPENROUTER_API_KEY",
-        fallback_models=["openrouter-llama-3.3-70b"]
+        api_endpoint="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        fallback_models=["groq-llama-3.3-70b-versatile"]
+    ),
+    
+    "groq-gpt-oss-20b": ModelInfo(
+        id="openai/gpt-oss-20b",
+        provider=ModelProvider.GROQ,
+        name="GPT OSS 20B (Groq)",
+        context_window=131_072,
+        strengths=["ultra_fast", "efficient", "coding", "20b", "fastest_1000_tps"],
+        rate_limits="250K TPM, 1K RPM",
+        cost="FREE",
+        api_endpoint="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        fallback_models=["groq-llama-3.1-8b-instant"]
+    ),
+    
+    "groq-compound": ModelInfo(
+        id="groq/compound",
+        provider=ModelProvider.GROQ,
+        name="Groq Compound (AI System)",
+        context_window=131_072,
+        strengths=["ai_system", "web_search", "code_execution", "agentic", "fast_450_tps"],
+        rate_limits="200K TPM, 200 RPM",
+        cost="FREE",
+        api_endpoint="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        fallback_models=["groq-llama-3.3-70b-versatile"]
+    ),
+    
+    "groq-compound-mini": ModelInfo(
+        id="groq/compound-mini",
+        provider=ModelProvider.GROQ,
+        name="Groq Compound Mini (AI System)",
+        context_window=131_072,
+        strengths=["ai_system", "fast", "efficient", "agentic", "fast_450_tps"],
+        rate_limits="200K TPM, 200 RPM",
+        cost="FREE",
+        api_endpoint="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        fallback_models=["groq-compound"]
+    ),
+    
+    "groq-llama-4-scout-17b": ModelInfo(
+        id="meta-llama/llama-4-scout-17b-16e-instruct",
+        provider=ModelProvider.GROQ,
+        name="Llama 4 Scout 17B 16E (Groq)",
+        context_window=131_072,
+        strengths=["reasoning", "coding", "latest", "llama4", "fast_750_tps"],
+        rate_limits="300K TPM, 1K RPM",
+        cost="FREE",
+        api_endpoint="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        fallback_models=["groq-llama-3.3-70b-versatile"]
+    ),
+    
+    "groq-gpt-oss-safeguard-20b": ModelInfo(
+        id="openai/gpt-oss-safeguard-20b",
+        provider=ModelProvider.GROQ,
+        name="Safety GPT OSS 20B (Groq)",
+        context_window=131_072,
+        strengths=["safety", "guardrails", "moderation", "fast_1000_tps"],
+        rate_limits="150K TPM, 1K RPM",
+        cost="FREE",
+        api_endpoint="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        fallback_models=["groq-llama-3.1-8b-instant"]
+    ),
+    
+    "groq-perplexity-llama-3.1-70b": ModelInfo(
+        id="llama-3.1-70b-instruct",
+        provider=ModelProvider.GROQ,
+        name="Llama 3.1 70B (Perplexity) (Groq)",
+        context_window=131_072,
+        strengths=["reasoning", "coding", "research", "70b"],
+        rate_limits="300K TPM, 1K RPM",
+        cost="FREE",
+        api_endpoint="https://api.groq.com/openai/v1/chat/completions",
+        api_key_env="GROQ_API_KEY",
+        fallback_models=["groq-llama-3.3-70b-versatile"]
     ),
 }
 
@@ -769,6 +849,9 @@ class TaskType(Enum):
     AGENT_SWARM = "agent_swarm"
     MULTIMODAL = "multimodal"
     SIMPLE_TASK = "simple_task"
+    RESEARCH = "research"
+    SAFETY_CHECK = "safety_check"
+    ULTRA_FAST = "ultra_fast"
 
 
 @dataclass
@@ -907,6 +990,82 @@ TASK_ASSIGNMENTS: List[TaskAssignment] = [
         tertiary_model="gemini-2.5-flash",
         why_primary="Cost-effective, fast, reliable for simple tasks",
         why_fallback="Groq for speed, Gemini 2.5 Flash for reliability"
+    ),
+    
+    # =========================================================================
+    # 🔒 NEW GROQ MODEL TASKS (Added 2026-05-29)
+    # =========================================================================
+    
+    # Research & Analysis - GPT OSS 120B (Groq - 500 tps)
+    TaskAssignment(
+        task_type=TaskType.RESEARCH,
+        display_name="Research & Analysis",
+        description="Deep research, analysis, complex problem solving",
+        primary_model="groq-gpt-oss-120b",
+        secondary_model="groq-llama-3.3-70b-versatile",
+        tertiary_model="gemini-3.5-flash",
+        why_primary="120B model, 500 tps, excellent for research and analysis",
+        why_fallback="Groq 70B for fast research, Gemini for reasoning"
+    ),
+    
+    # Ultra Fast - GPT OSS 20B (Groq - 1000 tps FASTEST!)
+    TaskAssignment(
+        task_type=TaskType.ULTRA_FAST,
+        display_name="Ultra Fast Response",
+        description="Fastest possible response for simple queries",
+        primary_model="groq-gpt-oss-20b",
+        secondary_model="groq-llama-3.1-8b-instant",
+        tertiary_model="gemini-1.5-flash-8b",
+        why_primary="FASTEST model at 1000 tps, optimized for speed",
+        why_fallback="Groq Llama 3.1 8B also fast, Gemini for efficiency"
+    ),
+    
+    # Safety Check - GPT OSS Safeguard 20B (Groq - 1000 tps)
+    TaskAssignment(
+        task_type=TaskType.SAFETY_CHECK,
+        display_name="Safety & Moderation",
+        description="Content safety, guardrails, moderation checks",
+        primary_model="groq-gpt-oss-safeguard-20b",
+        secondary_model="gemini-1.5-flash",
+        tertiary_model="groq-llama-3.1-8b-instant",
+        why_primary="Safety-optimized model, 1000 tps, guardrails built-in",
+        why_fallback="Gemini for safety, Groq for speed"
+    ),
+    
+    # Agent Swarm - Groq Compound (AI System with tools!)
+    TaskAssignment(
+        task_type=TaskType.AGENT_SWARM,
+        display_name="Agent Swarm (AI System)",
+        description="AI agent with web search and code execution built-in",
+        primary_model="groq-compound",
+        secondary_model="groq-compound-mini",
+        tertiary_model="gemini-3.5-flash",
+        why_primary="AI SYSTEM with web search + code execution, 450 tps, agentic",
+        why_fallback="Compound Mini for efficiency, Gemini for reasoning"
+    ),
+    
+    # Code Generation - Llama 4 Scout 17B (Groq - 750 tps, Latest!)
+    TaskAssignment(
+        task_type=TaskType.CODE_GENERATION,
+        display_name="Code Generation (Latest)",
+        description="Generate code using latest Llama 4 model",
+        primary_model="groq-llama-4-scout-17b",
+        secondary_model="openrouter-deepseek-v4-flash",
+        tertiary_model="gemini-3.5-flash",
+        why_primary="Latest Llama 4, 750 tps, cutting-edge coding capabilities",
+        why_fallback="DeepSeek for best coder, Gemini for reasoning"
+    ),
+    
+    # Code Review - Perplexity Llama 3.1 70B (Groq - 300K TPM!)
+    TaskAssignment(
+        task_type=TaskType.CODE_REVIEW,
+        display_name="Code Review (High Limit)",
+        description="Comprehensive code review with high rate limits",
+        primary_model="groq-perplexity-llama-3.1-70b",
+        secondary_model="openrouter-llama-3.3-70b",
+        tertiary_model="groq-llama-3.3-70b-versatile",
+        why_primary="70B model with 300K TPM high rate limit for reviews",
+        why_fallback="OpenRouter 70B for reviews, Groq fast 70B"
     ),
 ]
 
