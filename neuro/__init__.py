@@ -47,6 +47,8 @@ from neuro.pipelines import run_pipeline, EnterpriseAppPipeline, DebugPipeline, 
 from neuro.healing import ErrorClassifier, auto_fix, DependencyResolver
 from neuro.qa import RouteChecker, run_qa_checks
 from neuro.stacks import STACKS, get_stack, select_stack_for_goal, StackProfile
+from neuro.deploy import deploy_app, generate_deployment_files, list_platforms, DEPLOYERS
+from neuro.deploy import DeploymentConfig
 
 __all__ = [
     # Core
@@ -88,4 +90,10 @@ __all__ = [
     "get_stack",
     "select_stack_for_goal",
     "StackProfile",
+    # Deploy
+    "deploy_app",
+    "generate_deployment_files",
+    "list_platforms",
+    "DEPLOYERS",
+    "DeploymentConfig",
 ]

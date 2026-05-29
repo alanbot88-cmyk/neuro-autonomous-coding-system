@@ -1,5 +1,13 @@
 """
 Stack Profiles - Predefined tech stacks for different app types
+
+Each stack includes recommended deployment platform:
+- Vercel: Next.js, static sites, React apps
+- Railway: FastAPI, Django, Express with Postgres
+- Render: Flask, Express, generic web apps
+- Docker: Any containerized application
+- Netlify: Static sites, Hugo, Jekyll
+- Replit: Quick prototypes, educational projects
 """
 
 from typing import Dict, Any, List
