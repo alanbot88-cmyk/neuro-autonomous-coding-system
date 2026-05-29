@@ -711,7 +711,7 @@ class SmartRouter:
     def health_check(self) -> Dict[str, Any]:
         """Check health of all providers."""
         health = {}
-        for provider in Provider:
+        for provider in self.PROVIDERS.keys():  # Only iterate over configured providers
             config = self.PROVIDERS[provider]
             has_key = bool(self._get_api_key(provider))
             in_cooldown = self._is_cooldown(provider)

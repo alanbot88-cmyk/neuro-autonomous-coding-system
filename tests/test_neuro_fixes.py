@@ -71,6 +71,8 @@ class TestProviderEnvDetection:
     
     def test_provider_keys_groq(self, monkeypatch):
         """Test Groq key retrieval."""
+        # Clear plural env vars first to avoid real keys interfering
+        monkeypatch.delenv("GROQ_API_KEYS", raising=False)
         monkeypatch.setenv("GROQ_API_KEY", "groq_key_123")
         reload_keys()  # Reload to pick up new env
         keys = get_provider_keys("groq")
@@ -78,6 +80,7 @@ class TestProviderEnvDetection:
     
     def test_provider_keys_openrouter(self, monkeypatch):
         """Test OpenRouter key retrieval."""
+        monkeypatch.delenv("OPENROUTER_API_KEYS", raising=False)
         monkeypatch.setenv("OPENROUTER_API_KEY", "or_key_456")
         reload_keys()
         keys = get_provider_keys("openrouter")
@@ -85,6 +88,7 @@ class TestProviderEnvDetection:
     
     def test_provider_keys_gemini(self, monkeypatch):
         """Test Gemini key retrieval."""
+        monkeypatch.delenv("GEMINI_API_KEYS", raising=False)
         monkeypatch.setenv("GEMINI_API_KEY", "gemini_key_789")
         reload_keys()
         keys = get_provider_keys("gemini")
@@ -92,6 +96,7 @@ class TestProviderEnvDetection:
     
     def test_has_provider_true(self, monkeypatch):
         """Test has_provider returns True when key exists."""
+        monkeypatch.delenv("GROQ_API_KEYS", raising=False)
         monkeypatch.setenv("GROQ_API_KEY", "some_key")
         reload_keys()
         assert has_provider("groq") is True
@@ -107,6 +112,7 @@ class TestProviderEnvDetection:
     
     def test_available_providers(self, monkeypatch):
         """Test available providers count."""
+        monkeypatch.delenv("GROQ_API_KEYS", raising=False)
         monkeypatch.setenv("GROQ_API_KEY", "key1")
         monkeypatch.setenv("OPENROUTER_API_KEY", "key2")
         reload_keys()

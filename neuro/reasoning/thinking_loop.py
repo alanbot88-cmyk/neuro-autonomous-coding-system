@@ -209,15 +209,56 @@ Provide a clear analysis and initial plan.
         
         elif pass_type == PassType.IMPLEMENTATION:
             return base_prompt + """
-IMPLEMENTATION PASS - Making Changes
+IMPLEMENTATION PASS - Creating Actual Files
 
-Based on the analysis:
-1. What specific code changes will you make?
-2. Show the exact code changes (file paths, line numbers if possible)
-3. Why will this fix the issue?
-4. What could go wrong?
+CRITICAL: You must output COMPLETE, WORKING code files that can be saved directly to disk.
+Output a JSON structure with file paths and complete file content:
 
-Be specific and concrete. Show the actual code changes.
+```json
+{
+  "files": [
+    {
+      "path": "app.py",
+      "content": "# Complete file content here...\nimport flask\n# ... rest of file"
+    },
+    {
+      "path": "models.py", 
+      "content": "# Complete file content"
+    }
+  ]
+}
+```
+
+Rules:
+1. Output ONLY the JSON structure, no additional text
+2. Include ALL necessary imports at the top of each file
+3. Include complete implementation - no placeholders or TODO
+4. Include docstrings and comments where helpful
+5. Make sure the code is syntactically correct and ready to run
+6. Create a requirements.txt with all dependencies
+
+Based on your analysis:
+1. What specific files will you create?
+2. What is the complete content of each file?
+3. What dependencies are needed?
+
+Output the JSON with complete file content now.
+```
+
+Rules:
+1. Output ONLY the JSON structure, no additional text
+2. Include ALL necessary imports at the top of each file
+3. Include complete implementation - no placeholders or TODO
+4. Include docstrings and comments where helpful
+5. Make sure the code is syntactically correct and ready to run
+6. Create a requirements.txt with all dependencies
+
+Based on your analysis:
+1. What specific files will you create?
+2. What is the complete content of each file?
+3. What dependencies are needed?
+
+Output the JSON with complete file content now.
 """
         
         elif pass_type == PassType.VALIDATION:
@@ -276,34 +317,21 @@ Provide final status and summary.
     
     def _get_system_prompt(self) -> str:
         """Get system prompt for thinking WITH skill awareness."""
-        return """You are Neuro, an expert software engineering AI with access to 259+ skills.
+        return """You are Neuro, an expert software engineering AI.
 
-SKILL SYSTEM:
-- You have access to specialized skills for different tasks
-- Available skill categories:
-  * Code Quality: code-review, code-simplifier, add-javadoc, security
-  * Version Control: github, gitlab, bitbucket, iterate
-  * DevOps: docker, kubernetes, vercel, azure-devops
-  * Data/ML: jupyter, spark-version-upgrade, datadog
-  * Frontend: frontend-design, theme-factory
-  * Communication: slack, discord, notion, linear
-  * Agent Memory: Learn from past experiences
+CRITICAL: Output ONLY a JSON code block, nothing else.
 
-THINKING PROCESS:
-1. Analyze the problem thoroughly
-2. Plan your approach (consider using relevant skills)
-3. Implement carefully (invoke skills as needed)
-4. Verify your work
-5. Learn from mistakes
+```json
+{
+  "files": [
+    {"path": "app.py", "content": "from flask import Flask\\napp = Flask(__name__)\\n@app.route('/')\\ndef home(): return 'Hello World'\\nif __name__ == '__main__':\\n    app.run(debug=True)"},
+    {"path": "requirements.txt", "content": "flask"}
+  ]
+}
+```
 
-When working:
-- Consider which skills could help at each stage
-- Use code-review for quality checks
-- Use security skill for auth/vulnerability tasks
-- Use github skill for version control tasks
-- Use docker/kubernetes for deployment tasks
-
-Be precise, thorough, and honest about uncertainties."""
+Follow this format EXACTLY. Replace content with your actual implementation.
+Include complete, working code. No explanations, just the JSON block."""
     
     def _score_convergence(self, new_response: str, best_response: str) -> float:
         """
