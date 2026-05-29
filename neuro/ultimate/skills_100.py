@@ -787,68 +787,68 @@ ULTIMATE_SKILLS: List[UltimateSkill] = [
 
     # ============ AI/ML (8 skills) ============
     UltimateSkill(
-        name="openai_integration",
+        name="ollama_local_llm",
         category=SkillCategory.AI_MODELS,
-        description="OpenAI API integration, GPT models, embeddings",
-        triggers=["openai", "gpt", "chatgpt", "dall-e", "whisper", "embedding"],
+        description="Local LLM with Ollama - FREE self-hosted models (Llama, Mistral, Qwen, Phi)",
+        triggers=["ollama", "local llm", "llama", "mistral", "qwen", "phi", "self-hosted", "local ai"],
         priority=1,
-        capabilities=["OpenAI API", "GPT", "embeddings", "fine-tuning"]
+        capabilities=["Local LLM", "Llama", "Mistral", "Qwen", "Phi", "No API costs", "Privacy"]
     ),
     UltimateSkill(
-        name="anthropic_claude",
+        name="lm_studio",
         category=SkillCategory.AI_MODELS,
-        description="Anthropic Claude API integration",
-        triggers=["claude", "anthropic", "artifacts"],
+        description="LM Studio - FREE local model runner with GUI",
+        triggers=["lm studio", "local model", "gui", "desktop"],
         priority=1,
-        capabilities=["Claude API", "artifacts", "tool use", "context"]
+        capabilities=["LM Studio", "Local models", "No cloud", "Free"]
     ),
     UltimateSkill(
-        name="google_gemini",
+        name="deepseek_free",
         category=SkillCategory.AI_MODELS,
-        description="Google Gemini API integration",
-        triggers=["gemini", "google ai", "palm", "vertex"],
+        description="DeepSeek API - FREE tier available",
+        triggers=["deepseek", "deep seek", "free api"],
         priority=1,
-        capabilities=["Gemini API", "multimodal", "vision", "context"]
+        capabilities=["DeepSeek API", "Free tier", "Chat", "Coder"]
     ),
     UltimateSkill(
-        name="local_llm_ollama",
+        name="groq_free",
         category=SkillCategory.AI_MODELS,
-        description="Local LLM with Ollama, self-hosted models",
-        triggers=["ollama", "local llm", "llama", "mistral", "qwen", "self-hosted"],
+        description="Groq API - FREE 30 req/min, fast inference",
+        triggers=["groq", "fast inference", "free tier"],
         priority=1,
-        capabilities=["Ollama", "local models", "Llama", "Mistral"]
+        capabilities=["Groq API", "Free tier", "Fast", "Llama"]
+    ),
+    UltimateSkill(
+        name="openrouter_free",
+        category=SkillCategory.AI_MODELS,
+        description="OpenRouter - FREE credits available",
+        triggers=["openrouter", "free credits", "multi-model"],
+        priority=1,
+        capabilities=["OpenRouter", "Free credits", "Multi-provider"]
     ),
     UltimateSkill(
         name="mcp_model_context",
         category=SkillCategory.AI_MODELS,
-        description="Model Context Protocol integration",
-        triggers=["mcp", "model context", "protocol", "tool"],
+        description="Model Context Protocol - Connect to any LLM",
+        triggers=["mcp", "model context", "protocol", "tool", "server"],
         priority=1,
-        capabilities=["MCP", "protocol", "tool integration", "servers"]
+        capabilities=["MCP", "Protocol", "Tool integration", "Servers"]
     ),
     UltimateSkill(
-        name="rag_implementation",
+        name="ollama_web_ui",
         category=SkillCategory.AI_MODELS,
-        description="RAG (Retrieval Augmented Generation) implementation",
-        triggers=["rag", "retrieval", "vector database", "embed", "chunk"],
+        description="Open WebUI - FREE web interface for Ollama",
+        triggers=["open webui", "ollama web", "web interface", "chatbot"],
         priority=2,
-        capabilities=["RAG", "vector search", "embeddings", "retrieval"]
+        capabilities=["Web UI", "Ollama interface", "RAG", "Knowledge"]
     ),
     UltimateSkill(
-        name="ai_prompt_engineering",
+        name="local_embeddings",
         category=SkillCategory.AI_MODELS,
-        description="AI prompt engineering, chain of thought, few-shot",
-        triggers=["prompt", "chain of thought", "few-shot", "zero-shot", "cot"],
-        priority=1,
-        capabilities=["prompts", "CoT", "few-shot", "system prompts"]
-    ),
-    UltimateSkill(
-        name="vector_database",
-        category=SkillCategory.DATA_SCIENCE,
-        description="Vector databases, Pinecone, Chroma, pgvector",
-        triggers=["vector", "pinecone", "chroma", "pgvector", "embedding", "similarity"],
+        description="Local embeddings with Ollama - FREE",
+        triggers=["embedding", "ollama embed", "local vector", "nomic"],
         priority=2,
-        capabilities=["vector DB", "similarity search", "embeddings"]
+        capabilities=["Local embeddings", "Nomic", "Ollama", "Free"]
     ),
 
     # ============ VERSION CONTROL & COLLABORATION (7 skills) ============
