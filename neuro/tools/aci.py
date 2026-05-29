@@ -427,12 +427,14 @@ class AgentCodingInterface:
         Apply a unified diff to a file safely.
         
         Args:
-            diff_content: Unified diff string
+            diff_content: Unified diff string (unified diff format)
             file_path: Path to target file
             
         Returns:
             Dictionary with 'success', 'applied', 'backup_path'
         """
+        import re
+        
         target = self._resolve_path(file_path)
         
         if not target.exists():
@@ -442,35 +444,93 @@ class AgentCodingInterface:
                 "applied": False
             }
         
-        # Create backup
+        # Create backup first
         backup_path = str(target) + ".backup"
-        with open(target, 'r', encoding='utf-8') as f:
-            original_content = f.read()
-        
-        with open(backup_path, 'w', encoding='utf-8') as f:
-            f.write(original_content)
+        try:
+            with open(target, 'r', encoding='utf-8') as f:
+                original_content = f.read()
+            
+            with open(backup_path, 'w', encoding='utf-8') as f:
+                f.write(original_content)
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Backup failed: {str(e)}",
+                "applied": False
+            }
         
         try:
-            # Parse diff and apply
-            result = list(difflib.unified_diff(
-                original_content.splitlines(keepends=True),
-                original_content.splitlines(keepends=True),
-                fromfile=str(target),
-                tofile=str(target),
-                lineterm=''
-            ))
+            lines = original_content.splitlines(keepends=True)
+            new_lines = []
             
-            # For actual diff application, we'd use a proper diff library
-            # This is a simplified version that creates backup
+            # Parse unified diff format
+            hunk_info = None
+            old_start, old_count = 0, 0
+            new_start, new_count = 0, 0
+            
+            for line in diff_content.splitlines(keepends=True):
+                # Parse hunk header: @@ -old_start,old_count +new_start,new_count @@
+                hunk_match = re.match(r'^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@', line)
+                if hunk_match:
+                    old_start = int(hunk_match.group(1))
+                    old_count = int(hunk_match.group(2)) if hunk_match.group(2) else 1
+                    new_start = int(hunk_match.group(3))
+                    new_count = int(hunk_match.group(4)) if hunk_match.group(4) else 1
+                    hunk_info = {
+                        "old_start": old_start - 1,  # 0-indexed
+                        "old_count": old_count,
+                        "new_start": new_start - 1,
+                        "new_count": new_count,
+                        "old_pos": 0
+                    }
+                    continue
+                
+                if hunk_info is None:
+                    continue
+                
+                # Process diff lines
+                if line.startswith('-'):
+                    # Line removed from old - skip it
+                    hunk_info["old_pos"] += 1
+                elif line.startswith('+'):
+                    # Line added in new - this goes to new_lines
+                    new_lines.append(line[1:])  # Remove '+'
+                elif line.startswith(' '):
+                    # Context line - copy from original
+                    orig_idx = hunk_info["old_start"] + hunk_info["old_pos"]
+                    if orig_idx < len(lines):
+                        new_lines.append(lines[orig_idx])
+                        hunk_info["old_pos"] += 1
+                    else:
+                        new_lines.append(line[1:])
+                elif line.startswith('\\'):
+                    # No newline at end marker - skip
+                    pass
+            
+            # Build final content
+            result_content = ''.join(new_lines)
+            
+            # Write modified content
+            with open(target, 'w', encoding='utf-8') as f:
+                f.write(result_content)
             
             return {
                 "success": True,
                 "applied": True,
                 "backup_path": backup_path,
-                "message": "Diff applied, backup created"
+                "message": f"Diff applied, backup created at {backup_path}"
             }
             
         except Exception as e:
+            # Restore from backup on error
+            try:
+                with open(backup_path, 'r', encoding='utf-8') as f:
+                    original = f.read()
+                with open(target, 'w', encoding='utf-8') as f:
+                    f.write(original)
+            except:
+                pass
+            
             return {
                 "success": False,
                 "error": str(e),

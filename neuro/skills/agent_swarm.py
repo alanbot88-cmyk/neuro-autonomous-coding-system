@@ -296,6 +296,79 @@ class AgentSwarmCoordinator:
         }
 
 
+# =============================================================================
+# ASYNC PARALLEL EXECUTION
+# =============================================================================
+
+async def execute_parallel_tasks(
+    tasks: List[AgentTask],
+    neuro_func: Callable,
+    max_concurrent: int = 5
+) -> Dict[str, AgentTask]:
+    """
+    Execute multiple tasks in parallel using asyncio.
+    
+    Args:
+        tasks: List of AgentTask objects to execute
+        neuro_func: Neuro function to call for each task
+        max_concurrent: Maximum concurrent tasks (default 5)
+        
+    Returns:
+        Dictionary mapping task ID to completed AgentTask
+    """
+    import asyncio
+    
+    results: Dict[str, AgentTask] = {}
+    semaphore = asyncio.Semaphore(max_concurrent)
+    
+    async def run_with_semaphore(task: AgentTask) -> AgentTask:
+        async with semaphore:
+            loop = asyncio.get_event_loop()
+            
+            def execute_sync():
+                role_prompts = {
+                    AgentRole.PLANNER: f"As a planner agent, {task.description}. Think step by step about the implementation approach.",
+                    AgentRole.CODER: f"As a coder agent, {task.description}. Write clean, efficient code.",
+                    AgentRole.REVIEWER: f"As a reviewer agent, {task.description}. Check for bugs, security issues, and code quality.",
+                    AgentRole.TESTER: f"As a tester agent, {task.description}. Write comprehensive tests.",
+                    AgentRole.DEBUGGER: f"As a debugger agent, {task.description}. Fix the identified issues.",
+                    AgentRole.VALIDATOR: f"As a validator agent, {task.description}. Verify the solution works correctly.",
+                }
+                
+                enhanced_goal = role_prompts.get(task.role, task.description)
+                model = AgentSwarmCoordinator.ROLE_MODELS.get(task.role, "auto")
+                
+                return neuro_func(
+                    goal=enhanced_goal,
+                    model=model,
+                    use_shell_executor=True,
+                    use_auto_fix=True,
+                    verbose=False
+                )
+            
+            task.status = "running"
+            start_time = time.time()
+            
+            try:
+                result = await loop.run_in_executor(None, execute_sync)
+                task.result = result
+                task.status = "completed" if result.success else "failed"
+            except Exception as e:
+                task.error = str(e)
+                task.status = "failed"
+            
+            task.duration_ms = (time.time() - start_time) * 1000
+            return task
+    
+    task_coroutines = [run_with_semaphore(task) for task in tasks]
+    completed_tasks = await asyncio.gather(*task_coroutines)
+    
+    for task in completed_tasks:
+        results[task.id] = task
+    
+    return results
+
+
 def run_swarm(goal: str) -> Dict[str, Any]:
     """
     Quick swarm execution.

@@ -485,6 +485,73 @@ class SmartRouter:
         
         return {"error": "All providers failed or unavailable"}
     
+    def chat(self, prompt: str, task_type: str = "code_generation",
+             max_tokens: int = 2000, system: str = None) -> str:
+        """
+        Simple chat interface. Routes to best model for task type.
+        Returns the response text string. Falls back through providers on failure.
+        """
+        from neuro.models import TASK_CATEGORIES
+        
+        # Get model for task type
+        if task_type in TASK_CATEGORIES:
+            primary = TASK_CATEGORIES[task_type]["primary"]
+            fallbacks = TASK_CATEGORIES[task_type].get("fallback", [])
+        else:
+            primary = "openrouter/deepseek/deepseek-v4-flash:free"
+            fallbacks = ["openrouter/qwen/qwen3-coder:free"]
+        
+        models_to_try = [primary] + [m for m in fallbacks if m != primary]
+        
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+        
+        for model_config in models_to_try[:4]:
+            try:
+                # Extract provider and model from config
+                if "/" in model_config:
+                    parts = model_config.split("/")
+                    provider = parts[0].lower()
+                    model = "/".join(parts[1:])
+                else:
+                    provider = "openrouter"
+                    model = model_config
+                
+                # Map provider to enum
+                provider_map = {
+                    "groq": Provider.GROQ,
+                    "openrouter": Provider.OPENROUTER,
+                    "huggingface": Provider.HUGGINGFACE,
+                    "cloudflare": Provider.CLOUDFLARE,
+                    "together": Provider.TOGETHER,
+                }
+                
+                provider_enum = provider_map.get(provider, Provider.OPENROUTER)
+                
+                # Call the provider
+                if provider_enum == Provider.GROQ:
+                    result = self._call_groq(model, messages, max_tokens=max_tokens)
+                elif provider_enum == Provider.OPENROUTER:
+                    result = self._call_openrouter(model, messages, max_tokens=max_tokens)
+                elif provider_enum == Provider.HUGGINGFACE:
+                    result = self._call_huggingface(model, messages, max_tokens=max_tokens)
+                elif provider_enum == Provider.CLOUDFLARE:
+                    result = self._call_cloudflare(model, messages, max_tokens=max_tokens)
+                elif provider_enum == Provider.TOGETHER:
+                    result = self._call_together(model, messages, max_tokens=max_tokens)
+                else:
+                    continue
+                
+                if "error" not in result and "content" in result:
+                    return result["content"]
+                    
+            except Exception as e:
+                continue
+        
+        return ""  # All providers failed
+
     def get_stats(self) -> Dict[str, Any]:
         """Get routing statistics."""
         with self.stats.lock:
