@@ -1,0 +1,131 @@
+# Neuro Ultimate - MCP Server Configuration
+# Claude Desktop and other MCP clients configuration
+
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp-server"]
+    },
+    "github_mcp": {
+      "command": "npx",
+      "args": ["-y", "@github-mcp/server"]
+    },
+    "fastmcp": {
+      "command": "pip",
+      "args": ["install", "fastmcp"]
+    },
+    "activepieces": {
+      "command": "docker",
+      "args": ["run", "-p", "3000:3000", "activepieces/activepieces"]
+    },
+    "mcp_toolbox": {
+      "command": "npx",
+      "args": ["-y", "@google/mcp-toolbox"]
+    },
+    "figma_context": {
+      "command": "npx",
+      "args": ["-y", "figma-context-mcp"]
+    },
+    "casdoor": {
+      "command": "docker",
+      "args": ["run", "-p", "8000:8000", "casbin/casdoor"]
+    },
+    "chrome_mcp": {
+      "command": "npx",
+      "args": ["-y", "@mcp-chrome/server"]
+    },
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@context7/mcp-server"]
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem"]
+    },
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"]
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@memory/mcp"]
+    },
+    "deepseek": {
+      "command": "npx",
+      "args": ["-y", "deepseek-mcp-server"]
+    },
+    "ollama_bridge": {
+      "command": "pip",
+      "args": ["install", "mcp-server-ollama-bridge"]
+    },
+    "openai_bridge": {
+      "command": "pip",
+      "args": ["install", "mcp-server-openai-bridge"]
+    },
+    "aws_mcp": {
+      "command": "npm",
+      "args": ["install", "-g", "@aws-mcp/server"]
+    },
+    "docker_mcp": {
+      "command": "npx",
+      "args": ["-y", "@docker/mcp"]
+    },
+    "slack_mcp": {
+      "command": "npx",
+      "args": ["-y", "@slackhq/mcp-server"]
+    },
+    "notion_mcp": {
+      "command": "npx",
+      "args": ["-y", "@notionhq/mcp-server"]
+    },
+    "linear_mcp": {
+      "command": "npx",
+      "args": ["-y", "@linear/mcp-server"]
+    },
+    "blender_mcp": {
+      "command": "pip",
+      "args": ["install", "blender-mcp"]
+    },
+    "puppeteer": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-puppeteer"]
+    },
+    "snyk": {
+      "command": "npx",
+      "args": ["-y", "@snyk/mcp"]
+    },
+    "discord_mcp": {
+      "command": "npm",
+      "args": ["install", "-g", "@discord/mcp-server"]
+    },
+    "svg_maker": {
+      "command": "npx",
+      "args": ["-y", "svgmaker-mcp"]
+    },
+    "sqlite": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sqlite"]
+    },
+    "brave_search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"]
+    },
+    "git": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-git"]
+    },
+    "redis": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-redis"]
+    },
+    "sentry": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-sentry"]
+    }
+  }
+}
