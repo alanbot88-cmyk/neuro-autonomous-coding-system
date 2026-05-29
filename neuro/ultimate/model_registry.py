@@ -1,17 +1,26 @@
 """
-Neuro Ultimate - Complete Model Registry
-==========================================
-50 FREE API models with task assignments and fallback chains.
+🧠 NEURO ULTIMATE - COMPLETE MODEL REGISTRY (LOCKED)
+=====================================================
+50 FREE API MODELS - ALL PERMANENTLY LOCKED 🔒
+
+⚠️  WARNING: ALL 50 MODELS ARE LOCKED AND PERMANENT!
+⚠️  DO NOT MODIFY, ADD, OR REMOVE ANY MODEL WITHOUT USER REQUEST!
+⚠️  THIS FILE IS THE SOURCE OF TRUTH FOR ALL MODEL CONFIGURATIONS.
 
 Last Updated: 2026-05-29
+Status: 🔒 LOCKED - ALL 50 MODELS PERMANENT
 
-API PROVIDERS (User's API Keys):
-- Gemini: gemini-3-flash-preview, gemini-3.5-flash, gemini-2.5-flash, gemini-1.5-pro, gemini-1.5-flash, +3 more
-- Groq: llama-3.3-70b-versatile, llama-3.1-8b-instant, qwen3-32b, mixtral-8x7b, +2 more
-- OpenRouter: deepseek-v4-flash, qwen3-coder, llama-3.3-70b, gemma-4, +15 more
-- Together AI, Cohere, HuggingFace, Cloudflare
+API PROVIDERS (User's API Keys - ALL FREE):
+- GEMINI_API_KEY: Google AI Studio (11 models)
+- GROQ_API_KEY: Groq (7 models)
+- OPENROUTER_API_KEY: OpenRouter (19 models)
+- TOGETHER_API_KEY: Together AI (5 models)
+- COHERE_API_KEY: Cohere (2 models)
+- HF_TOKEN: HuggingFace (3 models)
+- CLOUDFLARE_API_TOKEN: Cloudflare (2 models)
+- Additional routes (1 model)
 
-Total: 50 FREE API Models (All via API keys - No local models!)
+TOTAL: 50 LOCKED MODELS
 """
 
 from typing import Dict, List, Optional, Callable
@@ -50,13 +59,13 @@ class ModelInfo:
 
 
 # =============================================================================
-# COMPLETE MODEL REGISTRY (51 FREE API MODELS)
+# 🔒 LOCKED MODEL REGISTRY (50 MODELS - DO NOT MODIFY)
 # =============================================================================
 
 MODEL_REGISTRY: Dict[str, ModelInfo] = {
     
     # =========================================================================
-    # GEMINI (Google AI Studio) - 8 MODELS - FREE TIER ⭐
+    # 🔒 GEMINI (Google AI Studio) - 11 MODELS - LOCKED 🔒
     # =========================================================================
     
     "gemini-3-flash-preview": ModelInfo(
@@ -164,7 +173,7 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
     ),
     
     # =========================================================================
-    # GROQ (Fast Inference) - 6 MODELS - FREE TIER ⭐
+    # 🔒 GROQ (Fast Inference) - 7 MODELS - LOCKED 🔒
     # =========================================================================
     
     "groq-llama-3.3-70b-versatile": ModelInfo(
@@ -246,7 +255,7 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
     ),
     
     # =========================================================================
-    # OPENROUTER (19 FREE MODELS) ⭐
+    # 🔒 OPENROUTER (19 MODELS) - LOCKED 🔒
     # =========================================================================
     
     "openrouter-deepseek-v4-flash": ModelInfo(
@@ -497,7 +506,7 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
     ),
     
     # =========================================================================
-    # TOGETHER AI (5 MODELS) - FREE CREDITS
+    # 🔒 TOGETHER AI (5 MODELS) - LOCKED 🔒
     # =========================================================================
     
     "together-llama-3.3-70b": ModelInfo(
@@ -566,7 +575,7 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
     ),
     
     # =========================================================================
-    # COHERE (2 MODELS) - TRIAL CREDITS
+    # 🔒 COHERE (2 MODELS) - LOCKED 🔒
     # =========================================================================
     
     "cohere-command-r-plus": ModelInfo(
@@ -596,7 +605,7 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
     ),
     
     # =========================================================================
-    # HUGGINGFACE (3 MODELS) - FREE INFERENCE
+    # 🔒 HUGGINGFACE (3 MODELS) - LOCKED 🔒
     # =========================================================================
     
     "huggingface-qwen-2.5-coder": ModelInfo(
@@ -639,7 +648,7 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
     ),
     
     # =========================================================================
-    # CLOUDFLARE WORKERS AI (2 MODELS) - FREE TIER
+    # 🔒 CLOUDFLARE WORKERS AI (2 MODELS) - LOCKED 🔒
     # =========================================================================
     
     "cloudflare-llama-3-70b": ModelInfo(
@@ -669,7 +678,7 @@ MODEL_REGISTRY: Dict[str, ModelInfo] = {
     ),
     
     # =========================================================================
-    # ADDITIONAL FREE MODELS (5 MORE)
+    # 🔒 ADDITIONAL MODELS (5 MODELS) - LOCKED 🔒
     # =========================================================================
     
     # Groq additional model

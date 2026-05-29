@@ -1,4 +1,4 @@
-# Neuro Autonomous Agent - INSTALLATION & USAGE GUIDE
+# Neuro Autonomous Agent - INSTALLATION & USAGE GUIDE 🔒 LOCKED
 
 ## Quick Setup
 

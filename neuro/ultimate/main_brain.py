@@ -1,13 +1,14 @@
 """
-🧠 NEURO MAIN BRAIN - PERMANENT MODEL ASSIGNMENTS
-==================================================
+🧠 NEURO MAIN BRAIN - PERMANENT MODEL ASSIGNMENTS (LOCKED 🔒)
+==============================================================
 This file defines the MAIN BRAIN configuration for Neuro.
 
-⚠️ DO NOT CHANGE THESE ASSIGNMENTS WITHOUT USER REQUEST!
-⚠️ These models are the permanent brain of the system.
+⚠️  🔒 LOCKED - ALL ASSIGNMENTS ARE PERMANENT!
+⚠️  DO NOT CHANGE THESE ASSIGNMENTS WITHOUT USER REQUEST!
+⚠️  These models are the permanent brain of the system.
 
 Last Updated: 2026-05-29
-Status: LOCKED - DO NOT MODIFY UNLESS USER REQUESTS
+Status: 🔒 LOCKED - DO NOT MODIFY UNLESS USER REQUESTS
 
 API KEYS REQUIRED:
 - GEMINI_API_KEY (Google AI Studio) - Primary brain key

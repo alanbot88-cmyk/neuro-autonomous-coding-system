@@ -1,20 +1,21 @@
 """
-Neuro Ultimate 100+ Skills - Complete Auto-Trigger System
+🧠 NEURO ULTIMATE 100+ SKILLS - LOCKED CONFIGURATION 🔒
 ==========================================================
 The most comprehensive skill integration for AI coding systems.
 All 100+ skills are automatically triggered based on task context.
-Uses 50+ FREE API models (no local setup required).
 
-API PROVIDERS:
-- Gemini (Google AI): Gemini 2.5 Flash, 3.5 Flash, Flash Preview
-- Groq: llama-3.3-70b, llama-3.1-8b, qwen3-32b
-- OpenRouter: DeepSeek V4 Flash, Qwen3 Coder, Llama 3.3 70B, Gemma 4
-- Together AI: Llama 3.3 70B, Qwen 2.5 Coder 32B
-- Cohere: Command R, Command R+
-- HuggingFace: Qwen 2.5 Coder, DeepSeek Coder V2
-- Cloudflare Workers AI: Llama 3 70B, Mistral 7B
+⚠️  🔒 LOCKED CONFIGURATION - ALL SKILLS AND MODELS PERMANENT!
+⚠️  DO NOT MODIFY WITHOUT USER REQUEST!
+
+Uses 50 LOCKED FREE API MODELS:
+- Gemini (Google AI): 11 models (gemini-3.5-flash, gemini-2.5-flash, +9 more)
+- Groq: 7 models (llama-3.3-70b, llama-3.1-8b, qwen3-32b, +4 more)
+- OpenRouter: 19 models (DeepSeek V4 Flash, Qwen3 Coder, +17 more)
+- Together AI: 5 models | Cohere: 2 models
+- HuggingFace: 3 models | Cloudflare: 2 models | Others: 1 model
 
 Last Updated: 2026-05-29
+Status: 🔒 ALL MODELS AND SKILLS LOCKED
 """
 
 from typing import Dict, List, Any, Optional, Callable
