@@ -57,9 +57,10 @@ class SmartRouter:
     Intelligent router that rotates across multiple FREE API providers.
     Ensures best model selection and automatic failover.
     NOW WITH SKILL MIDDLEWARE INTEGRATION for 259+ skills.
+    Supports 50+ free models with 22 task categories.
     """
     
-    # Provider configurations
+    # Provider configurations with 50+ models
     PROVIDERS: Dict[Provider, ProviderConfig] = {
         Provider.GROQ: ProviderConfig(
             name=Provider.GROQ,
@@ -70,6 +71,8 @@ class SmartRouter:
                 "llama-3.1-8b-instant",
                 "qwen/qwen3-32b",
                 "meta-llama/llama-4-scout-17b-16e-instruct",
+                "llama-3.2-90b-vision-instruct",
+                "mixtral-8x7b-32768",
             ],
             rate_limit=30,
         ),
@@ -78,13 +81,24 @@ class SmartRouter:
             base_url="https://openrouter.ai/api/v1",
             api_key_env="OPENROUTER_API_KEYS",
             models=[
+                "deepseek/deepseek-v4-flash:free",
                 "qwen/qwen3-coder:free",
                 "qwen/qwen3-next-80b-a3b-instruct:free",
-                "deepseek/deepseek-v4-flash:free",
                 "google/gemma-4-31b-it:free",
                 "google/gemma-4-26b-a4b-it:free",
                 "meta-llama/llama-3.3-70b-instruct:free",
                 "meta-llama/llama-3.2-3b-instruct:free",
+                "nvidia/nemotron-3-super-120b-a12b:free",
+                "openai/gpt-oss-120b:free",
+                "openai/gpt-oss-20b:free",
+                "liquid/lfm-2.5-1.2b-thinking:free",
+                "poolside/laguna-m.1:free",
+                "baidu/cobuddy:free",
+                "z-ai/glm-4.5-air:free",
+                "inflection/inflection-3-pi:free",
+                "mistralai/mistral-nemo:free",
+                "anthropic/claude-3-haiku:free",
+                "microsoft/phi-4:free",
             ],
             rate_limit=60,
         ),
@@ -95,6 +109,9 @@ class SmartRouter:
             models=[
                 "Qwen/Qwen2.5-Coder-32B-Instruct",
                 "deepseek-ai/DeepSeek-Coder-V2",
+                "bigcode/CodeLlama-70B-Instruct",
+                "bigcode/Starcoder2-15B",
+                "WizardAI/WizardCoder-33B",
             ],
             requires_endpoint=True,
             rate_limit=30,
@@ -103,7 +120,11 @@ class SmartRouter:
             name=Provider.CLOUDFLARE,
             base_url="https://api.cloudflare.com/client/v4/workers",
             api_key_env="CLOUDFLARE_AI_API_TOKEN",
-            models=["@cf/meta/llama-3-70b-instruct-fp8-fast"],
+            models=[
+                "@cf/meta/llama-3.1-70b-instruct",
+                "@cf/mistral/mistral-7b-instruct-v0.2",
+                "@cf/deepseek-ai/deepseek-coder-6.7b",
+            ],
             requires_endpoint=True,
             rate_limit=1000,
         ),
@@ -114,6 +135,9 @@ class SmartRouter:
             models=[
                 "meta-llama/Llama-3.3-70B-Instruct",
                 "Qwen/Qwen2.5-Coder-32B-Instruct",
+                "Qwen/Qwen2.5-72B-Instruct",
+                "mistralai/Mixtral-8x7B-Instruct",
+                "deepseek-ai/DeepSeek-Coder-V2-Instruct",
             ],
             rate_limit=30,
         ),
