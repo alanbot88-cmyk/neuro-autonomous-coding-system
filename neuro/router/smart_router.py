@@ -7,7 +7,7 @@ NOW WITH SKILL MIDDLEWARE INTEGRATION
 import os
 import time
 import random
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 import threading
@@ -20,13 +20,99 @@ except ImportError:
     MIDDLEWARE_AVAILABLE = False
 
 
+# =============================================================================
+# PROVIDER ENUM - ALL SUPPORTED PROVIDERS
+# =============================================================================
+
 class Provider(Enum):
     """Available API providers."""
+    GEMINI = "gemini"
     GROQ = "groq"
     OPENROUTER = "openrouter"
     HUGGINGFACE = "huggingface"
-    CLOUDFLARE = "cloudflare"
     TOGETHER = "together"
+    CLOUDFLARE = "cloudflare"
+    DEEPSEEK = "deepseek"  # Via OpenRouter
+    QWEN = "qwen"  # Via OpenRouter
+
+
+# =============================================================================
+# KEY MANAGEMENT - Supports singular and plural env vars
+# =============================================================================
+
+def _get_env_keys(var_name: str, fallback_singular: str = None) -> List[str]:
+    """
+    Get API keys from environment (supports comma-separated).
+    Checks both plural (KEYS) and singular (KEY) forms.
+    """
+    # Try plural first (comma-separated)
+    value = os.getenv(var_name, "")
+    if value:
+        keys = [k.strip() for k in value.split(",") if k.strip()]
+        if keys:
+            return keys
+    
+    # Try singular fallback
+    if fallback_singular:
+        singular = os.getenv(fallback_singular, "")
+        if singular:
+            return [singular.strip()]
+    
+    return []
+
+
+def _init_provider_keys() -> Dict[str, List[str]]:
+    """Initialize API keys for all providers from environment."""
+    return {
+        # Gemini/Google - supports both singular and plural
+        "gemini": _get_env_keys("GEMINI_API_KEYS", "GEMINI_API_KEY"),
+        "google": _get_env_keys("GOOGLE_API_KEYS", "GOOGLE_API_KEY"),
+        
+        # Groq - supports both singular and plural
+        "groq": _get_env_keys("GROQ_API_KEYS", "GROQ_API_KEY"),
+        
+        # OpenRouter - supports both singular and plural
+        # QWEN and DEEPSEEK are routed through OpenRouter
+        "openrouter": _get_env_keys("OPENROUTER_API_KEYS", "OPENROUTER_API_KEY"),
+        
+        # HuggingFace
+        "huggingface": _get_env_keys("HF_TOKEN") or _get_env_keys("HUGGINGFACE_API_KEYS", "HUGGINGFACE_API_KEY"),
+        
+        # Together AI
+        "together": _get_env_keys("TOGETHER_API_KEYS", "TOGETHER_API_KEY"),
+        
+        # Cloudflare
+        "cloudflare": _get_env_keys("CLOUDFLARE_AI_API_TOKEN"),
+    }
+
+
+# Initialize keys at module load
+_PROVIDER_KEYS = _init_provider_keys()
+
+
+def get_provider_keys(provider: str) -> List[str]:
+    """Get API keys for a provider."""
+    return _PROVIDER_KEYS.get(provider, [])
+
+
+def has_provider(provider: str) -> bool:
+    """Check if provider has available keys."""
+    return bool(get_provider_keys(provider))
+
+
+def available_providers() -> Dict[str, int]:
+    """Get available providers and their key counts."""
+    return {
+        provider: len(keys) 
+        for provider, keys in _PROVIDER_KEYS.items() 
+        if keys
+    }
+
+
+def reload_keys():
+    """Reload keys from environment (useful for testing)."""
+    global _PROVIDER_KEYS
+    _PROVIDER_KEYS = _init_provider_keys()
 
 
 @dataclass
@@ -62,6 +148,19 @@ class SmartRouter:
     
     # Provider configurations with 50+ models
     PROVIDERS: Dict[Provider, ProviderConfig] = {
+        Provider.GEMINI: ProviderConfig(
+            name=Provider.GEMINI,
+            base_url="https://generativelanguage.googleapis.com/v1beta",
+            api_key_env="GEMINI_API_KEYS",
+            models=[
+                "gemini-3.5-flash",
+                "gemini-2.5-flash",
+                "gemini-2.5-flash-lite",
+                "gemini-3.1-flash-lite",
+                "gemini-2.0-flash-exp",
+            ],
+            rate_limit=60,
+        ),
         Provider.GROQ: ProviderConfig(
             name=Provider.GROQ,
             base_url="https://api.groq.com/openai/v1",
@@ -99,6 +198,11 @@ class SmartRouter:
                 "mistralai/mistral-nemo:free",
                 "anthropic/claude-3-haiku:free",
                 "microsoft/phi-4:free",
+                # Qwen and DeepSeek via OpenRouter
+                "qwen/qwen3-32b",
+                "qwen/qwen2.5-72b-instruct",
+                "deepseek/deepseek-coder-v2",
+                "deepseek/deepseek-chat",
             ],
             rate_limit=60,
         ),
@@ -151,15 +255,9 @@ class SmartRouter:
         self.middleware = get_middleware() if MIDDLEWARE_AVAILABLE else None
     
     def _get_api_key(self, provider: Provider) -> Optional[str]:
-        """Get API key from environment."""
-        config = self.PROVIDERS[provider]
-        keys_str = os.getenv(config.api_key_env, "")
-        
-        if not keys_str:
-            return None
-        
-        # Support comma-separated keys
-        keys = [k.strip() for k in keys_str.split(",") if k.strip()]
+        """Get API key from environment using new key management system."""
+        # Use new key management for consistency
+        keys = get_provider_keys(provider.value)
         if not keys:
             return None
         
@@ -404,12 +502,54 @@ class SmartRouter:
                 self._set_cooldown(provider)
                 self.stats.failures[provider.value] = 0
     
+    def _call_gemini(self, model: str, messages: List[Dict], **kwargs) -> Dict[str, Any]:
+        """Call Gemini API."""
+        try:
+            import google.genai as genai
+        except ImportError:
+            return {"error": "google-genai not installed: pip install google-genai"}
+        
+        api_key = self._get_api_key(Provider.GEMINI)
+        if not api_key:
+            return {"error": "No Gemini API key found"}
+        
+        try:
+            client = genai.Client(api_key=api_key)
+            
+            # Convert messages format for Gemini
+            contents = []
+            for msg in messages:
+                role = "user" if msg["role"] == "user" else "model"
+                contents.append(genai.Content(role=role, parts=[genai.Part(text=msg["content"])]))
+            
+            # Filter kwargs for Gemini API
+            clean_kwargs = {
+                k: v for k, v in kwargs.items()
+                if k in ["temperature", "max_output_tokens", "top_p", "stop"]
+            }
+            
+            response = client.models.generate_content(
+                model=f"models/{model}",
+                contents=contents,
+                **clean_kwargs
+            )
+            
+            self._record_success(Provider.GEMINI, model)
+            
+            return {
+                "content": response.text,
+                "provider": "gemini",
+                "model": model,
+            }
+        except Exception as e:
+            self._record_failure(Provider.GEMINI, model, str(e))
+            return {"error": str(e)}
+    
     def _get_available_providers(self) -> List[Provider]:
         """Get list of available providers (have keys, not in cooldown)."""
         available = []
         for provider in Provider:
-            if f"{provider.value.upper()}_API_KEY" in os.environ or \
-               f"{provider.value.upper()}_TOKEN" in os.environ:
+            if has_provider(provider.value):
                 if not self._is_cooldown(provider):
                     available.append(provider)
         return available
@@ -461,7 +601,9 @@ class SmartRouter:
                 selected_model = random.choice(config.models)
             
             # Call provider
-            if provider == Provider.GROQ:
+            if provider == Provider.GEMINI:
+                result = self._call_gemini(selected_model, messages, **kwargs)
+            elif provider == Provider.GROQ:
                 result = self._call_groq(selected_model, messages, **kwargs)
             elif provider == Provider.OPENROUTER:
                 result = self._call_openrouter(selected_model, messages, **kwargs)
@@ -521,11 +663,15 @@ class SmartRouter:
                 
                 # Map provider to enum
                 provider_map = {
+                    "gemini": Provider.GEMINI,
+                    "google": Provider.GEMINI,  # Alias for Gemini
                     "groq": Provider.GROQ,
                     "openrouter": Provider.OPENROUTER,
                     "huggingface": Provider.HUGGINGFACE,
                     "cloudflare": Provider.CLOUDFLARE,
                     "together": Provider.TOGETHER,
+                    "deepseek": Provider.OPENROUTER,  # Via OpenRouter
+                    "qwen": Provider.OPENROUTER,  # Via OpenRouter
                 }
                 
                 provider_enum = provider_map.get(provider, Provider.OPENROUTER)

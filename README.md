@@ -1,127 +1,148 @@
 # Neuro - Autonomous Coding System
 
 An intelligent multi-model routing agent system with automatic skill integration.
+Neuro is a brain-inspired autonomous engineering runtime designed to build production-grade apps.
+
+## ⚠️ HONEST STATUS
+
+**Current Status**: Neuro has a working core loop for autonomous coding.
+
+**What's Real**:
+- ✅ Multi-provider model routing (Groq, OpenRouter, Gemini, Together, HuggingFace, Cloudflare)
+- ✅ 50+ model registry with structured metadata and role-based selection
+- ✅ Staged cognitive routing (planner → coder → debugger → validator)
+- ✅ Structured edit format for machine-parseable file changes
+- ✅ Command execution with validation
+- ✅ Error repair loop
+- ✅ Local mini eval harness (smoke tests, NOT official benchmarks)
+- ✅ Safe file writing with workspace boundary enforcement
+
+**What's NOT Claimed**:
+- ❌ Official HumanEval scores (not tested yet)
+- ❌ Official SWE-bench scores (not tested yet)
+- ❌ "Beats Kimi/Manus/Claude Code" (not proven)
+- ❌ 75-85% benchmark performance (target, not achieved)
+
+**Target**: Build toward competitive autonomous coding performance using free/fallback model routing.
+
+## Architecture
+
+### Core Loop
+```
+Task intake → Repo scan → Planning → File selection → Structured edit generation
+    → Safe file writing → Command execution → Test/build validation
+    → Error analysis → Repair loop → Final diff summary
+```
+
+### Model System
+- **50+ models** across 8+ providers
+- **Role-based routing**: Planner, Architect, Coder, Debugger, Validator, Reviewer, Frontend, Documentation
+- **Fallback chains**: Primary model → same provider next key → different provider → generic fallback
+- **Free-first execution**: Prioritizes free models before paid
+- **Key rotation**: Supports comma-separated multi-key configuration
+
+### Supported Providers
+| Provider | Models | Key Env Vars |
+|----------|--------|--------------|
+| Groq | 6 | GROQ_API_KEY, GROQ_API_KEYS |
+| OpenRouter | 20+ | OPENROUTER_API_KEY, OPENROUTER_API_KEYS |
+| Gemini | 5 | GEMINI_API_KEY, GEMINI_API_KEYS, GOOGLE_API_KEY |
+| Together | 5 | TOGETHER_API_KEY, TOGETHER_API_KEYS |
+| HuggingFace | 5 | HF_TOKEN, HUGGINGFACE_API_KEY |
+| Cloudflare | 3 | CLOUDFLARE_AI_API_TOKEN |
+
+Note: Qwen and DeepSeek models are accessed via OpenRouter keys.
 
 ## Features
 
-- **Smart Router**: Routes tasks to 50+ free AI models based on task type
-- **Chain-of-Thought Reasoning**: Multi-pass thinking with error correction
-- **Patch Guards**: Only applies verified, non-breaking changes
-- **Memory System**: Learns from past failures
-- **Automatic Skill Integration**: 259+ skills + 15+ plugins auto-triggered based on context
-
-## Available Skills & Plugins
-
-### Core Skills (259+)
-| Category | Skills |
-|----------|--------|
-| **Version Control** | github, gitlab, bitbucket, github-pr-review, iterate, ssh |
-| **Code Quality** | code-review, code-simplifier, add-javadoc, security |
-| **Frontend** | frontend-design, theme-factory |
-| **DevOps** | docker, kubernetes, ssh, vercel, azure-devops |
-| **Data/ML** | jupyter, spark-version-upgrade, datadog, tensorflow, pytorch |
-| **Communication** | slack-channel-monitor, discord, notion, linear |
-| **Agent SDK** | openhands-sdk, agent-sdk-builder, agent-creator |
-| **Meta** | add-skill, agent-memory, skill-creator, release-notes |
-
-### New Skills Added (4)
-| Skill | Description |
-|-------|-------------|
-| **MCP Integration (swarmclaw)** | Model Context Protocol integration for connecting to Ollama, LM Studio, OpenAI, Anthropic |
-| **Open Design Skills** | Access to 259+ OpenHands skills catalog with category-based lookup |
-| **Agent Memory (swarmvault)** | Persistent memory system for learning from experience |
-| **Browser Automation** | Playwright-based web automation and scraping |
-
-### Plugins (10+)
-| Plugin | Purpose |
-|--------|---------|
-| city-weather | Weather API integration |
-| cobol-modernization | Legacy COBOL code modernization |
-| magic-test | Intelligent test generation |
-| migration-scoring | Migration analysis and scoring |
-| onboarding | Project onboarding assistance |
-| openhands | OpenHands integration |
-| pr-review | Automated PR review |
-| qa-changes | QA testing automation |
-| release-notes | Changelog generation |
-| vulnerability-remediation | Security vulnerability fixes |
+- **Smart Router**: Routes tasks to 50+ AI models based on task type and role
+- **Structured Edit Format**: Machine-parseable JSON for file changes
+- **Safe File Writer**: Workspace boundary enforcement, backup, dry-run mode
+- **Command Runner**: Captures stdout/stderr, timeout, dangerous command blocking
+- **Error Repair Loop**: Analyzes failures, generates fixes, re-validates
+- **Memory System**: Stores task history, model performance, fallback events
+- **Mini Eval Harness**: Local smoke tests for autonomous coding capability
 
 ## Usage
 
+### Basic Autonomous Coding
 ```python
-from neuro import create_agent
+from neuro.tools import AutonomousEditLoop, parse_structured_edit
 
-# Create an agent
-agent = create_agent(goal="Fix the security vulnerability in auth.py")
-result = agent.run()
+# Create edit loop
+loop = AutonomousEditLoop("/path/to/project", dry_run=False)
 
-# Auto-skill detection
-from neuro.skills import auto_skills
+# Parse model's structured edit
+edit, errors = parse_structured_edit(model_response)
 
-# Skills are automatically invoked based on task context
-result = auto_skills("Review PR changes", {"file_path": "src/main.py"})
-
-# Invoke specific skills
-from neuro.skills import invoke_skill, mcp_connect, browse_web, store_memory
-
-# MCP Integration
-mcp_result = mcp_connect(provider="ollama", model="llama2")
-
-# Browser Automation
-browse_result = browse_web("Navigate to https://example.com and click the login button")
-
-# Memory System
-store_memory("Learned to use the new API pattern", tags=["api", "pattern"])
+# Apply and validate
+result = loop.execute_and_validate(edit)
 ```
 
-## Automatic Skill Triggering
-
-Skills are automatically triggered based on:
-- Task keywords (e.g., "github", "security", "frontend", "mcp", "browser")
-- File types (e.g., .py → code-review, .tsx → frontend-design)
-- Error context (e.g., security errors → security skill)
-- Code patterns (regex-based matching)
-
-## New Skill Usage Examples
-
-### MCP Integration (swarmclaw)
+### Router Usage
 ```python
-from neuro.skills import MCPSkill, mcp_invoke
+from neuro.router.smart_router import SmartRouter, Provider
 
-# Connect to Ollama
-result = mcp_invoke("Process this task", provider="ollama", model="llama2")
-
-# Connect to LM Studio
-result = mcp_invoke("Analyze code", provider="lm_studio", endpoint="http://localhost:1234")
+router = SmartRouter()
+result = router.complete(
+    messages=[{"role": "user", "content": "Fix the bug"}],
+    model="openrouter/qwen/qwen3-coder:free"
+)
 ```
 
-### Browser Automation (Playwright)
+### Model Registry
 ```python
-from neuro.skills import BrowserAutomation
-
-# Natural language task
-result = BrowserAutomation.invoke(
-    "Navigate to github.com and click on the Sign In button"
+from neuro.models import (
+    MODEL_REGISTRY,
+    get_models_by_role,
+    get_free_models,
+    ModelRole,
 )
 
-# Get generated script
-print(result["playwright_script"])
+# Get coder models sorted by priority
+coders = get_models_by_role(ModelRole.CODER)
+
+# Get all free models
+free_models = get_free_models()
 ```
 
-### Agent Memory (swarmvault)
+### Mini Eval Harness
 ```python
-from neuro.skills import remember, recall, get_context, MemoryType
+from neuro.validation.mini_eval import run_mini_evals
 
-# Store important information
-remember("Fixed the auth bug by updating the token validation", 
-         memory_type=MemoryType.EPISODIC,
-         tags=["bug-fix", "auth"])
+# Run local smoke tests (NOT official benchmarks)
+summary = run_mini_evals()
+print(f"Passed: {summary['passed']}/{summary['total']}")
+```
 
-# Recall relevant memories
-memories = recall("auth bug fix")
+## Testing
 
-# Get context for a new task
-context = get_context("Fix login issue")
+```bash
+# Run all tests
+pytest tests/ -v
+
+# Run specific test categories
+pytest tests/test_neuro_fixes.py -v
+
+# Run mini evals
+python -m neuro.validation.mini_eval
+```
+
+## Environment Variables
+
+```bash
+# Required for providers (at least one needed)
+GROQ_API_KEY=your_key_here
+OPENROUTER_API_KEY=your_key_here
+GEMINI_API_KEY=your_key_here
+
+# Multiple keys (comma-separated)
+GROQ_API_KEYS=key1,key2,key3
+
+# Optional providers
+TOGETHER_API_KEY=your_key
+HF_TOKEN=your_token
+CLOUDFLARE_AI_API_TOKEN=your_token
 ```
 
 ## License
