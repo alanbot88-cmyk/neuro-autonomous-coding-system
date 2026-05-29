@@ -17,14 +17,26 @@ from neuro.executor.agent_loop import create_agent, run_goal
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Neuro Autonomous Agent - Beat Kimi, Manus, Claude at SWE-bench",
+        description="Neuro Autonomous Agent - Enterprise App Builder System",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python -m neuro --goal "Fix the login bug in main.py"
-  python -m neuro -g "Add user authentication" -d /path/to/project
-  python -m neuro -g "Refactor" --dry-run
-  python -m neuro -g "Fix bug" --json-output result.json
+  python -m neuro --goal "Build a CRM for real estate agents"
+  python -m neuro --mode enterprise --goal "Build a SaaS app"
+  python -m neuro --mode debug --goal "Fix this app until it runs"
+  python -m neuro --mode website --goal "Create a landing page"
+  python -m neuro --mode deploy --goal "Deploy to Vercel"
+  python -m neuro --dry-run -v
+  
+Working Modes:
+  auto        - Auto-detect mode from goal
+  enterprise - Build full SaaS applications
+  website    - Build landing pages
+  debug      - Fix existing broken projects
+  presentation - Build presentations
+  api        - Build API services
+  refactor   - Refactor existing code
+  deploy     - Deploy applications
   
 Environment Variables:
   GROQ_API_KEYS - Groq API key (free tier)
@@ -145,12 +157,20 @@ Environment Variables:
         help="Show router statistics"
     )
     
+    parser.add_argument(
+        "--mode",
+        default="auto",
+        choices=["auto", "enterprise", "website", "debug", "presentation", "api", "refactor", "deploy"],
+        help="Operation mode (default: auto-detect)"
+    )
+    
     args = parser.parse_args()
     
     # Version
     if args.version:
-        print("Neuro Autonomous Agent v0.1.0")
-        print("Target: 75-80% on SWE-bench")
+        print("Neuro Autonomous Agent v2.0.0")
+        print("Target: Enterprise App Builder")
+        print("Modes: enterprise, website, debug, deploy, etc.")
         print("Using free API providers")
         return 0
     

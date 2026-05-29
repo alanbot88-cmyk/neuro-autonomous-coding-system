@@ -190,3 +190,166 @@ class TestModels:
             assert "/" in model, f"Model '{model}' should have provider/model format"
             parts = model.split("/")
             assert len(parts) >= 2, f"Model '{model}' should have provider/model format"
+
+
+class TestProductIntake:
+    """Test product intake system."""
+
+    def test_product_spec_exists(self):
+        from neuro.product import ProductSpec
+        assert ProductSpec is not None
+
+    def test_requirement_parser_exists(self):
+        from neuro.product import RequirementParser
+        assert RequirementParser is not None
+
+    def test_parse_goal_function(self):
+        from neuro.product import parse_goal
+        spec = parse_goal("Build a CRM for real estate agents")
+        assert spec.app_type in ["crm", "saas", "webapp"]
+        assert "admin" in spec.users or "agent" in spec.users
+
+    def test_parse_landing_page(self):
+        from neuro.product import parse_goal
+        spec = parse_goal("Create a landing page for my startup")
+        assert spec.app_type == "landing"
+
+
+class TestArchitecture:
+    """Test architecture planner."""
+
+    def test_architecture_plan_exists(self):
+        from neuro.architecture import ArchitecturePlan
+        assert ArchitecturePlan is not None
+
+    def test_app_architect_exists(self):
+        from neuro.architecture import AppArchitect
+        assert AppArchitect is not None
+
+    def test_create_architecture(self):
+        from neuro.product import parse_goal
+        from neuro.architecture import create_architecture
+        
+        spec = parse_goal("Build a todo app")
+        arch = create_architecture(spec, "nextjs")
+        
+        assert arch.project_name is not None
+        assert isinstance(arch.pages, list)
+        assert isinstance(arch.components, list)
+
+
+class TestWorkspace:
+    """Test workspace file manager."""
+
+    def test_safe_file_writer_exists(self):
+        from neuro.workspace import SafeFileWriter
+        assert SafeFileWriter is not None
+
+    def test_repo_map_exists(self):
+        from neuro.workspace import RepoMap
+        assert RepoMap is not None
+
+    def test_change_tracker_exists(self):
+        from neuro.workspace import ChangeTracker
+        assert ChangeTracker is not None
+
+    def test_safe_write_dry_run(self, tmp_path):
+        from neuro.workspace import SafeFileWriter
+        
+        writer = SafeFileWriter(str(tmp_path), dry_run=True)
+        result = writer.write("test.txt", "Hello World")
+        
+        assert result is True
+        # File should not exist in dry-run mode
+        assert not (tmp_path / "test.txt").exists()
+
+
+class TestHealing:
+    """Test self-healing system."""
+
+    def test_error_classifier_exists(self):
+        from neuro.healing import ErrorClassifier
+        assert ErrorClassifier is not None
+
+    def test_classify_missing_package(self):
+        from neuro.healing import ErrorClassifier
+        
+        classifier = ErrorClassifier()
+        category = classifier.classify("ModuleNotFoundError: No module named 'requests'")
+        assert category == "missing_package"
+
+    def test_classify_syntax_error(self):
+        from neuro.healing import ErrorClassifier
+        
+        classifier = ErrorClassifier()
+        category = classifier.classify("SyntaxError: invalid syntax")
+        assert category == "syntax_error"
+
+    def test_auto_fix(self):
+        from neuro.healing import auto_fix
+        
+        result = auto_fix("ModuleNotFoundError: No module named 'requests'")
+        assert "category" in result
+        assert "suggestions" in result
+
+
+class TestQA:
+    """Test QA system."""
+
+    def test_route_checker_exists(self):
+        from neuro.qa import RouteChecker
+        assert RouteChecker is not None
+
+    def test_playwright_runner_exists(self):
+        from neuro.qa import PlaywrightRunner
+        assert PlaywrightRunner is not None
+
+
+class TestStacks:
+    """Test stack profiles."""
+
+    def test_stacks_defined(self):
+        from neuro.stacks import STACKS
+        assert isinstance(STACKS, dict)
+        assert len(STACKS) > 0
+
+    def test_default_stack(self):
+        from neuro.stacks import get_stack
+        stack = get_stack("nextjs_supabase")
+        assert stack.name == "nextjs_supabase"
+        assert "Next.js" in stack.frontend
+
+    def test_select_stack_for_goal(self):
+        from neuro.stacks import select_stack_for_goal
+        
+        stack = select_stack_for_goal("Build a landing page")
+        assert stack.name == "static_landing"
+
+
+class TestPipeline:
+    """Test enterprise pipeline."""
+
+    def test_pipeline_context_exists(self):
+        from neuro.pipelines import PipelineContext
+        assert PipelineContext is not None
+
+    def test_enterprise_pipeline_exists(self):
+        from neuro.pipelines import EnterpriseAppPipeline
+        assert EnterpriseAppPipeline is not None
+
+    def test_debug_pipeline_exists(self):
+        from neuro.pipelines import DebugPipeline
+        assert DebugPipeline is not None
+
+    def test_run_pipeline_dry_run(self):
+        from neuro.pipelines import run_pipeline
+        
+        result = run_pipeline(
+            goal="Build a todo app",
+            mode="enterprise",
+            dry_run=True,
+        )
+        
+        assert "success" in result
+        assert "steps" in result
+        assert len(result["steps"]) > 0

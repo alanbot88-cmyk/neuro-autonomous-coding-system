@@ -82,6 +82,7 @@ class AgentConfig:
     use_verification: bool = True  # ECC verification loops
     use_security: bool = True  # AgentShield security
     use_orchestration: bool = True  # ✅ Multi-agent ENABLED (critical for 80%+)
+    use_autonomous_loop: bool = True  # NEW: Self-improvement loops
     # NEW: Shell Executor & Self-Healing
     use_shell_executor: bool = True  # Execute shell commands
     use_auto_fix: bool = True  # Auto-fix errors
@@ -461,11 +462,13 @@ def create_agent(
     model: Optional[str] = None,
     test_first: bool = True,
     use_cot: bool = True,
+    use_memory: bool = True,  # NEW: Memory flag
     use_skills: bool = True,  # Enable 259+ skills
     use_decomposer: bool = True,  # NEW: ECC-style task planning
     use_verification: bool = True,  # NEW: ECC verification loops
     use_security: bool = True,  # NEW: AgentShield security
     use_orchestration: bool = False,  # NEW: Multi-agent for complex tasks
+    use_autonomous_loop: bool = True,  # NEW: Self-improvement loops
     dry_run: bool = True,
     verbose: bool = True,
 ) -> NeuroAgent:
@@ -480,6 +483,7 @@ def create_agent(
             working_dir="/path/to/project",
             test_first=True,
             use_cot=True,
+            use_memory=True,
             use_skills=True,  # Enable 259+ skills
             use_decomposer=True,  # Enable task decomposition (ECC /plan)
             use_verification=True,  # Enable verification loops
@@ -499,11 +503,13 @@ def create_agent(
         model=model,
         test_first=test_first,
         use_cot=use_cot,
+        use_memory=use_memory,  # NEW
         use_skills=use_skills,
         use_decomposer=use_decomposer,  # NEW
         use_verification=use_verification,  # NEW
         use_security=use_security,  # NEW
         use_orchestration=use_orchestration,  # NEW
+        use_autonomous_loop=use_autonomous_loop,  # NEW
         dry_run=dry_run,
         verbose=verbose,
     )
