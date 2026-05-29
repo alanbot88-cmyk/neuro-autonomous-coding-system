@@ -64,6 +64,24 @@ _lazy_imports = {
     "component_driven": "neuro.skills.component_driven.ComponentDrivenSkill",
     "system_prompt": "neuro.skills.system_prompt.SystemPromptScaffoldSkill",
     "asset_mapping": "neuro.skills.asset_mapping.AssetMappingSkill",
+    
+    # NEW: Cross-session features (from screenshots)
+    "deep_research": "neuro.skills.deep_research.DeepResearchAgent",
+    "research": "neuro.skills.deep_research.DeepResearchAgent",
+    "slide_builder": "neuro.skills.slide_builder.SlideBuilder",
+    "slides": "neuro.skills.slide_builder.SlideBuilder",
+    "presentation": "neuro.skills.slide_builder.SlideBuilder",
+    "document_generator": "neuro.skills.document_generator.DocumentGenerator",
+    "document": "neuro.skills.document_generator.DocumentGenerator",
+    "docs": "neuro.skills.document_generator.DocumentGenerator",
+    "enhanced_browser": "neuro.skills.enhanced_browser.EnhancedBrowserAgent",
+    "form_fill": "neuro.skills.enhanced_browser.EnhancedBrowserAgent",
+    "cross_session_memory": "neuro.skills.cross_session_memory.CrossSessionMemory",
+    "progress_tracker": "neuro.skills.progress_tracker.RealTimeProgressTracker",
+    "progress": "neuro.skills.progress_tracker.RealTimeProgressTracker",
+    "human_collaboration": "neuro.skills.human_collaboration.HumanAgentCollaboration",
+    "collaborate": "neuro.skills.human_collaboration.HumanAgentCollaboration",
+    "checkpoint": "neuro.skills.human_collaboration.HumanAgentCollaboration",
 }
 
 def _lazy_get_skill(name: str):
@@ -180,6 +198,22 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "component_driven": None,
     "system_prompt": None,
     "asset_mapping": None,
+    
+    # NEW: Cross-session features
+    "deep_research": None,
+    "research": None,
+    "slide_builder": None,
+    "slides": None,
+    "presentation": None,
+    "document_generator": None,
+    "document": None,
+    "enhanced_browser": None,
+    "form_fill": None,
+    "cross_session_memory": None,
+    "progress_tracker": None,
+    "progress": None,
+    "human_collaboration": None,
+    "collaborate": None,
 }
 
 class SkillManager:

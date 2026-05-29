@@ -1,6 +1,12 @@
 """
-Neuro Agent Memory System (swarmvault)
-Persistent memory and knowledge management for autonomous agents
+Cross-Session Memory System - Enhanced agent memory with learning
+Competitor: Manus Memory across sessions
+
+Features:
+- Persistent memory across completely different runs
+- Learning from task outcomes
+- Pattern recognition and recommendations
+- Cross-session context transfer
 """
 
 import os
@@ -11,6 +17,7 @@ from typing import Dict, List, Optional, Any, Set
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from enum import Enum
+import sqlite3
 
 class MemoryType(Enum):
     """Types of memory storage"""
@@ -18,6 +25,8 @@ class MemoryType(Enum):
     SEMANTIC = "semantic"      # Learned knowledge and patterns
     WORKING = "working"         # Current context
     PROCEDURAL = "procedural"   # Learned procedures
+    SESSION = "session"         # Cross-session memory
+    LEARNED = "learned"         # Permanently learned insights
 
 @dataclass
 class MemoryEntry:
