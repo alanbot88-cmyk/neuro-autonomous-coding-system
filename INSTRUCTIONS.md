@@ -1,6 +1,6 @@
 # Neuro Autonomous Agent - INSTALLATION & USAGE GUIDE
 
-## Quick Setup (When You Have PC)
+## Quick Setup
 
 ```bash
 # 1. Clone the repo
@@ -10,25 +10,35 @@ cd neuro-autonomous-coding-system
 # 2. Install dependencies
 pip install -r requirements.txt
 
-# 3. Get FREE API keys (NO credit card!)
+# 3. Set API Keys (NO credit card required!)
+# Get your keys from the respective platforms
 
-# Groq: https://console.groq.com/keys
-export GROQ_API_KEYS="your-groq-key"
+# Gemini (Google AI Studio) - FREE tier with generous limits
+export GEMINI_API_KEY="your-gemini-api-key"
 
-# OpenRouter: https://openrouter.ai/keys  
-export OPENROUTER_API_KEYS="your-openrouter-key"
+# Groq - FREE tier (30 req/min)
+export GROQ_API_KEY="your-groq-api-key"
 
-# HuggingFace: https://huggingface.co/settings/inference-tokens
+# OpenRouter - FREE credits available
+export OPENROUTER_API_KEY="your-openrouter-api-key"
+
+# Optional: Together AI ($5 free credits)
+export TOGETHER_API_KEY="your-together-api-key"
+
+# Optional: Cohere (Trial credits)
+export COHERE_API_KEY="your-cohere-api-key"
+
+# Optional: HuggingFace
 export HF_TOKEN="your-hf-token"
 
-# Optional: Together AI
-export TOGETHER_API_KEY="your-together-key"
+# Optional: Cloudflare Workers AI
+export CLOUDFLARE_API_TOKEN="your-cf-token"
 
 # 4. Run Neuro
 PYTHONPATH=. python -m neuro --goal "Fix the bug in main.py"
 
 # Or use CLI
-python -m neuro.cli "Add user authentication"
+python -m neuro "Add user authentication"
 ```
 
 ---
@@ -39,13 +49,10 @@ python -m neuro.cli "Add user authentication"
 - Python 3.10+
 - pip
 - Git
-
-### Optional (for performance):
-- Docker (for isolated testing)
-- SQLite (built into Python)
+- API keys (all FREE, no credit card)
 
 ### NOT Required:
-- GPU/Local model
+- GPU/Local models (all via API)
 - Credit card
 - Money
 
@@ -53,7 +60,26 @@ python -m neuro.cli "Add user authentication"
 
 ## 🔑 API KEY SETUP (Step by Step)
 
-### Step 1: Get Groq Key (Recommended First)
+### Step 1: Get Gemini API Key (⭐ RECOMMENDED - Generous Free Tier)
+
+1. Go to: https://aistudio.google.com/app/apikey
+2. Sign in with Google account
+3. Click "Create API Key"
+4. Copy key
+5. Add to environment:
+```bash
+export GEMINI_API_KEY="AIza...."
+```
+
+**Gemini Free Tier Includes:**
+- gemini-3-flash-preview (latest, cutting-edge)
+- gemini-3.5-flash (advanced reasoning)
+- gemini-2.5-flash (fast, reliable)
+- gemini-1.5-pro (2M context!)
+- gemini-1.5-flash (cost-efficient)
+- gemini-exp-1206 (experimental)
+
+### Step 2: Get Groq API Key (⭐ Fast Inference)
 
 1. Go to: https://console.groq.com/keys
 2. Sign up with email (FREE)
@@ -61,50 +87,65 @@ python -m neuro.cli "Add user authentication"
 4. Copy key
 5. Add to environment:
 ```bash
-export GROQ_API_KEYS="gsk_xxxxx"
+export GROQ_API_KEY="gsk_xxxxx"
 ```
 
-### Step 2: Get OpenRouter Key
+**Groq Free Tier Includes:**
+- llama-3.3-70b-versatile (fast 70B)
+- llama-3.1-8b-instant (ultra-fast)
+- qwen3-32b (balanced)
+- mixtral-8x7b (fast MoE)
+
+### Step 3: Get OpenRouter API Key
 
 1. Go to: https://openrouter.ai/keys
 2. Sign up (FREE)
 3. Create key
 4. FREE models available:
-   - qwen/qwen3-coder:free
-   - deepseek/deepseek-v4-flash:free
+   - deepseek/deepseek-v4-flash:free ⭐ (Best coder, 1M context!)
+   - qwen/qwen3-coder:free ⭐ (480B MoE)
+   - meta-llama/llama-3.3-70b-instruct:free
    - google/gemma-4-31b-it:free
+   - And 15+ more!
 
 ```bash
-export OPENROUTER_API_KEYS="sk-or-v1-xxxxx"
-```
-
-### Step 3: Get HuggingFace Token
-
-1. Go to: https://huggingface.co/settings/inference-tokens
-2. Create new token
-3. Copy token
-
-```bash
-export HF_TOKEN="hf_xxxxx"
+export OPENROUTER_API_KEY="sk-or-v1-xxxxx"
 ```
 
 ### Step 4: Optional - Together AI
 
 1. Go to: https://api.together.xyz/
-2. Sign up for free tier
+2. Sign up for free tier ($5 credits)
 3. Get API key
 
 ```bash
 export TOGETHER_API_KEY="xxxxx"
 ```
 
+### Step 5: Optional - Cohere
+
+1. Go to: https://dashboard.cohere.com/api-keys
+2. Create trial key
+3. Get API key
+
+```bash
+export COHERE_API_KEY="xxxxx"
+```
+
 ### Save Keys Permanently:
 
 ```bash
 # Add to ~/.bashrc or ~/.zshrc
-echo 'export GROQ_API_KEYS="your-key"' >> ~/.bashrc
-echo 'export OPENROUTER_API_KEYS="your-key"' >> ~/.bashrc
-echo 'export HF_TOKEN="your-token"' >> ~/.bashrc
+cat >> ~/.bashrc << 'EOF'
+export GEMINI_API_KEY="your-gemini-key"
+export GROQ_API_KEY="your-groq-key"
+export OPENROUTER_API_KEY="your-openrouter-key"
+export TOGETHER_API_KEY="your-together-key"
+export COHERE_API_KEY="your-cohere-key"
+export HF_TOKEN="your-hf-token"
+export CLOUDFLARE_API_TOKEN="your-cf-token"
+EOF
+
 source ~/.bashrc
 ```
 
@@ -243,11 +284,12 @@ neuro/
 
 ```bash
 # Check keys are set
-env | grep -E "GROQ|OPENROUTER|HF"
+env | grep -E "GEMINI|GROQ|OPENROUTER"
 
 # Set keys
-export GROQ_API_KEYS="your-key"
-export OPENROUTER_API_KEYS="your-key"
+export GEMINI_API_KEY="your-key"
+export GROQ_API_KEY="your-key"
+export OPENROUTER_API_KEY="your-key"
 ```
 
 ### "Rate limit exceeded"
@@ -418,5 +460,7 @@ make clean
 
 ---
 
-**Last Updated: 2026-05-28**
-**Version: 0.1.0**
+**Last Updated: 2026-05-29**
+**Version: 0.2.0**
+
+**Features: 50+ FREE API Models, Gemini 3.5 Flash, DeepSeek V4 Flash, Qwen3 Coder, 100+ Auto-trigger Skills**

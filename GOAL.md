@@ -1,11 +1,11 @@
 # Neuro Autonomous Agent - PROJECT GOALS
 
-## 🎯 MISSION (Updated: 2026-05-28)
+## 🎯 MISSION (Updated: 2026-05-29)
 
 **Beat Kimi K2.5 (76.8%), Manus 1.6, Claude Code (~70%), GPT-5 (80.0%)**
-**Target: 75-80% on SWE-bench using ONLY free models + superior architecture**
+**Target: 75-80% on SWE-bench using FREE API models + superior architecture**
 
-**Constraint: $0 Budget, Email-Only APIs - NO credit card required!**
+**Constraint: $0 Budget, API-only (no local models) - Using API keys provided by user**
 
 ---
 
@@ -17,12 +17,12 @@
 | Manus 1.6 | ?% | Multi-model, Browser automation | Multi-provider routing |
 | Claude Code | ~70% | Test-first, Git ops, Iterative fix | Test validation loop |
 | GPT-5 | 80.0% | Extended thinking, 1M context | Context compression + multi-pass |
-| **Neuro** | **65-75%** | **50+ free models, Smart routing** | **Architecture wins** |
+| **Neuro** | **65-75%** | **50+ API models, Smart routing** | **Architecture wins** |
 
 ### Key Insight from Kimi K2.5:
 > "55.4% → 78.4% with Agent Swarm (+23%!)"
 
-### Architecture = 20-25% boost even with free models!
+### Architecture = 20-25% boost even with free API models!
 
 ---
 
@@ -30,7 +30,7 @@
 
 ### The Math (How We Reach 75-80%):
 ```
-Base free model (DeepSeek V4 Flash)    39.8% coding
+Base Gemini 2.5 Flash (free API)        ~40% coding
 + Thinking mode (chain-of-thought)      +5%
 + Multi-pass refinement (5x runs)       +10%
 + Test-first validation                 +10%
@@ -38,47 +38,170 @@ Base free model (DeepSeek V4 Flash)    39.8% coding
 + Context management                    +5%
 + Smart routing                         +5%
 ────────────────────────────────────────────────
-= TOTAL                                = 74.8%
+= TOTAL                                = ~75%
 ```
 
 ### Even without perfect implementation: 65-75% realistic
 
 ---
 
-## 🆓 FREE API PROVIDERS (Email-Only, No Card)
+## 🔑 API PROVIDERS & KEYS (User-Provided)
 
-### Tier 1: Best Free (No Rate Limits) ⭐
-1. **OpenRouter** - openrouter.ai/keys
-   - 18+ COMPLETELY FREE models
-   - **DeepSeek V4 Flash:free** ⭐ (39.8% coding, 1M context!)
-   - **Qwen3 Coder:free** (480B MoE)
-   - Llama 3.3 70B:free, Gemma 4 31B:free
+### ✅ User Has API Keys For:
+1. **Groq API** - All free models (30 req/min)
+2. **Gemini API** - All free tier models (generous limits)
+3. **OpenRouter** - Free credits available
 
-### Tier 2: Also Free
-2. **Together AI** - $5 free credits + free tier
-3. **Groq** - High rate limits, fast inference
-4. **Cohere** - Trial credits, Command-R series
-5. **HuggingFace** - Free inference tier
-6. **Cloudflare Workers AI** - 10K neurons/day
-7. **Lepton AI** - Free compute
-8. **Google AI Studio** - Gemini free tier
-
-**Total: 50+ completely free models**
+### Environment Variables Needed:
+```bash
+export GEMINI_API_KEY="your-gemini-key"        # Gemini free tier
+export GROQ_API_KEY="your-groq-key"            # Groq free tier  
+export OPENROUTER_API_KEY="your-openrouter-key" # OpenRouter credits
+export TOGETHER_API_KEY="your-together-key"     # $5 free credits
+export COHERE_API_KEY="your-cohere-key"         # Trial credits
+export HF_TOKEN="your-hf-token"                 # HuggingFace
+export CLOUDFLARE_API_TOKEN="your-cf-token"     # Workers AI
+```
 
 ---
 
-## 📋 TASK-TO-MODEL ASSIGNMENT (Free Models Only)
+## 🤖 COMPLETE MODEL REGISTRY (50+ FREE API MODELS)
 
-| Task | Primary | Fallback | Why |
-|------|---------|----------|-----|
-| Code Generation | DeepSeek V4 Flash:free | Qwen3 Coder:free | Best coding (39.8%) |
-| Deep Reasoning | DeepSeek V4 Flash:free | Llama 3.3 70B:free | 1M context + agentic |
-| Bug Detection | Qwen3 Coder:free | Llama 3.1 8B | MoE model |
-| Code Review | Llama 3.3 70B:free | DeepSeek V4 Flash:free | 70B model |
-| Test Writing | Qwen3 Coder:free | Together Qwen 32B | Coding optimized |
-| Fast Response | Llama 3.1 8B (Groq) | Llama 3.1 8B:free | Fast inference |
-| Long Context | DeepSeek V4 Flash (1M!) | Qwen3 Coder:free | 1M tokens |
-| Agent Swarm | DeepSeek V4 Flash:free | All models | Parallel execution |
+### 📌 GEMINI (Google AI Studio) - FREE TIER ⭐
+| Model | Context | Strengths | Rate Limit |
+|-------|---------|-----------|------------|
+| **gemini-3-flash-preview** | 1M | Cutting-edge, latest features | 15 req/min |
+| **gemini-3.5-flash** | 1M | Advanced reasoning, coding | 15 req/min |
+| **gemini-2.5-flash** | 1M | Fast, reliable, multimodal | 15 req/min |
+| gemini-1.5-pro | 2M | Complex reasoning, long context | 50 req/min |
+| gemini-1.5-flash | 1M | Cost-efficient, fast | 15 req/min |
+| gemini-exp-1206 | 1M | Experimental, research | Limited |
+
+### 📌 GROQ (Fast Inference) - FREE TIER ⭐
+| Model | Context | Strengths | Rate Limit |
+|-------|---------|-----------|------------|
+| **llama-3.3-70b-versatile** | 128K | Fast 70B, coding, reasoning | 30 req/min |
+| **llama-3.1-8b-instant** | 128K | Ultra-fast, efficient | 30 req/min |
+| qwen3-32b | 128K | Balanced, coding | 30 req/min |
+| mixtral-8x7b-32768 | 32K | Fast MoE | 30 req/min |
+
+### 📌 OPENROUTER (18+ FREE MODELS) ⭐
+| Model | Context | Strengths |
+|-------|---------|-----------|
+| **deepseek/deepseek-v4-flash:free** | 1M | ⭐ Best coder (39.8% SWE-bench), 1M context |
+| **qwen/qwen3-coder:free** | 128K | ⭐ 480B MoE, excellent at code |
+| **meta-llama/llama-3.3-70b-instruct:free** | 128K | 70B model, general purpose |
+| google/gemma-4-31b-it:free | 128K | Efficient reasoning |
+| nvidia/nemotron-3-super-120b:free | 128K | 120B large model |
+| qwen/qwen3-next-80b-a3b-instruct:free | 128K | Advanced reasoning |
+| qwen/qwen2.5-72b-instruct:free | 128K | Coder optimized |
+| google/gemma-4-26b-a4b-it:free | 128K | Fast, efficient |
+| openai/gpt-oss-120b:free | 128K | Large OSS model |
+| liquid/lfm-2.5-1.2b-thinking:free | 128K | Thinking model |
+| openai/gpt-oss-20b:free | 128K | Fast OSS |
+| meta-llama/llama-3.2-3b-instruct:free | 128K | Small, fast |
+| poolside/laguna-m.1:free | 128K | Balanced |
+| nvidia/nemotron-3-nano-30b-a3b:free | 128K | Nano 30B |
+| poolside/laguna-xs.2:free | 128K | Ultra fast |
+| nvidia/nemotron-nano-9b-v2:free | 128K | Fast nano |
+| deepseek/deepseek-chat-v3:free | 128K | Chat variant |
+| z-ai/glm-4.5-air:free | 128K | Chinese model |
+| baidu/cobuddy:free | 128K | Baidu model |
+
+### 📌 TOGETHER AI (FREE CREDITS)
+| Model | Context | Strengths |
+|-------|---------|-----------|
+| meta-llama/Llama-3.3-70B-Instruct-Turbo | 128K | Coding, reasoning |
+| Qwen/Qwen2.5-Coder-32B-Instruct | 128K | ⭐ Coder specialized |
+| deepseek-ai/DeepSeek-Coder-V2 | 128K | Code completion |
+| mistralai/Mistral-7B-Instruct-v0.3 | 128K | Fast, efficient |
+| mistralai/Codestral-22B-v0.1 | 128K | Dedicated coder |
+
+### 📌 COHERE (TRIAL)
+| Model | Context | Strengths |
+|-------|---------|-----------|
+| command-r-plus | 128K | Tool use, reasoning |
+| command-r | 128K | Efficient reasoning |
+
+### 📌 HUGGINGFACE (FREE INFERENCE)
+| Model | Context | Strengths |
+|-------|---------|-----------|
+| Qwen/Qwen2.5-Coder-32B-Instruct | 128K | Coding |
+| deepseek-ai/DeepSeek-Coder-V2 | 128K | Code completion |
+| bigcode/starcoder2-15b | 128K | Open source coder |
+
+### 📌 CLOUDFLARE WORKERS AI (FREE)
+| Model | Context | Strengths |
+|-------|---------|-----------|
+| @cf/meta/llama-3-70b-instruct | 128K | Edge, fast |
+| @cf/mistral/mistral-7b-instruct-v0.2 | 128K | Edge fast |
+
+---
+
+## 📋 TASK-TO-MODEL ASSIGNMENTS WITH FALLBACKS
+
+| Task | Primary Model | Fallback 1 | Fallback 2 | Why Primary |
+|------|---------------|------------|------------|-------------|
+| **Code Generation** | deepseek-v4-flash | qwen3-coder | gemini-2.5-flash | Best coder (39.8% SWE-bench), 1M context |
+| **Deep Reasoning** | gemini-3.5-flash | deepseek-v4-flash | command-r-plus | Advanced reasoning, latest features |
+| **Bug Detection** | qwen3-coder | deepseek-v4-flash | gemini-2.5-flash | MoE model (480B) for code analysis |
+| **Code Review** | llama-3.3-70b | deepseek-v4-flash | gemini-2.5-flash | 70B model for comprehensive review |
+| **Test Writing** | qwen-2.5-coder-32b | qwen3-coder | deepseek-v4-flash | Specialized coder model |
+| **Fast Response** | llama-3.1-8b-instant | llama-3.2-3b | mistral-7b | Ultra-fast inference |
+| **Long Context** | deepseek-v4-flash | gemini-1.5-pro | gemini-2.5-flash | 1M token context |
+| **Agent Swarm** | gemini-3.5-flash | llama-3.3-70b | deepseek-v4-flash | Fast, cheap, parallel execution |
+| **Multimodal** | gemini-2.5-flash | gemini-1.5-pro | deepseek-v4-flash | Native multimodal support |
+| **Simple Task** | llama-3.1-8b-instant | llama-3.2-3b | gemini-2.5-flash | Fastest, cheapest |
+
+---
+
+## 🔄 FALLBACK CHAINS (Per Category)
+
+### Coding Fallback Chain:
+```
+deepseek-v4-flash → qwen3-coder → qwen-2.5-coder-32b → gemini-2.5-flash → llama-3.3-70b
+```
+
+### Reasoning Fallback Chain:
+```
+gemini-3.5-flash → deepseek-v4-flash → command-r-plus → llama-3.3-70b
+```
+
+### Fast Response Fallback Chain:
+```
+llama-3.1-8b-instant → llama-3.2-3b → mistral-7b → gemini-2.5-flash
+```
+
+### Long Context Fallback Chain:
+```
+deepseek-v4-flash → gemini-1.5-pro → gemini-2.5-flash → command-r-plus
+```
+
+### Multimodal Fallback Chain:
+```
+gemini-2.5-flash → gemini-1.5-pro → deepseek-v4-flash
+```
+
+### Default Fallback Chain:
+```
+gemini-2.5-flash → deepseek-v4-flash → llama-3.3-70b → llama-3.3-70b (OpenRouter)
+```
+
+---
+
+## 📁 MODEL REGISTRY FILE
+
+All models are documented in: `neuro/ultimate/model_registry.py`
+
+```python
+from neuro.ultimate.model_registry import (
+    MODEL_REGISTRY,           # All 50+ models
+    TASK_ASSIGNMENTS,         # Task-to-model assignments
+    FALLBACK_CHAINS,          # Fallback chains per category
+    get_primary_model_for_task,  # Auto-select model
+    get_fallback_chain,       # Get fallbacks
+)
+```
 
 ---
 
@@ -95,17 +218,16 @@ Base free model (DeepSeek V4 Flash)    39.8% coding
 ### From Manus AI:
 - [x] Multi-model orchestration (via router)
 - [x] File operations
+- [x] Multi-provider API routing
 - [ ] Browser automation (future)
-- [ ] Workflow chaining (planned)
-- [ ] Persistent memory (extend SQLite)
 
 ### From Claude Code:
 - [x] Codebase-aware execution
 - [x] Multi-file editing
 - [x] Terminal access
 - [x] Test-first validation
-- [x] **Git operations** (extend)
-- [x] **Pattern-based search/replace**
+- [x] Git operations
+- [x] Pattern-based search/replace
 
 ### From GPT-5 (80.0%):
 - [x] Extended thinking (via multi-pass)
@@ -116,66 +238,76 @@ Base free model (DeepSeek V4 Flash)    39.8% coding
 
 ---
 
-## 📁 MODEL REGISTRY (50+ FREE MODELS)
+## 📍 CURRENT STAGE (2026-05-29)
 
-### OpenRouter FREE Models (Verified)
-```
-DEEPSEEK (BEST FOR CODING):
-- deepseek/deepseek-v4-flash:free ⭐ 39.8% coding, 1M context
-- deepseek/deepseek-chat-v3:free
+### ✅ COMPLETED:
+- [x] Research benchmarks (SWE-bench official results)
+- [x] Research top agents (Kimi, Manus, Claude, Codex)
+- [x] Identify 50+ FREE API models
+- [x] Complete model registry with task assignments
+- [x] Fallback chains for all categories
+- [x] API-based routing (no local models)
 
-QWEN (BEST MoE):
-- qwen/qwen3-coder:free ⭐ 480B MoE
-- qwen/qwen3-next-80b-a3b-instruct:free
-- qwen/qwen2.5-72b-instruct:free
+### ✅ BUILT:
+- [x] neuro/ultimate/model_registry.py - 50+ models, task assignments, fallbacks
+- [x] neuro/ultimate/skills_100.py - 100+ skills, auto-trigger system
+- [x] neuro/ultimate/auto_invocation.py - Automatic skill triggering
+- [x] neuro/ultimate/neuro_100.py - Neuro Ultimate integration
+- [x] neuro/router/smart_router.py - Smart API routing
+- [x] neuro/router/fallback.py - Fallback handling
+- [x] neuro/reasoning/chain_of_thought.py - CoT prompting
+- [x] neuro/reasoning/thinking_loop.py - Multi-pass reasoning
+- [x] neuro/reasoning/self_reflect.py - Self-reflection
+- [x] neuro/validation/test_runner.py - Test execution
+- [x] neuro/validation/patch_guard.py - Patch validation
+- [x] neuro/memory/task_store.py - SQLite memory
+- [x] neuro/executor/agent_loop.py - Main agent
+- [x] neuro/__main__.py - CLI entry
+- [x] GOAL.md - Project documentation (updated)
+- [x] INSTRUCTIONS.md - Installation guide
+- [x] requirements.txt - Dependencies
 
-GOOGLE (GEMMA):
-- google/gemma-4-31b-it:free
-- google/gemma-4-26b-a4b-it:free
+---
 
-META (LLAMA):
-- meta-llama/llama-3.3-70b-instruct:free
-- meta-llama/llama-3.2-3b-instruct:free
+## 📝 CHANGE LOG (2026-05-29)
 
-NVIDIA (NEMOTRON):
-- nvidia/nemotron-3-super-120b-a12b:free
-- nvidia/nemotron-nano-9b-v2:free
-- nvidia/nemotron-3-nano-30b-a3b:free
+| Date | Change | Files |
+|------|--------|-------|
+| 2026-05-28 | Initial goals set | - |
+| 2026-05-28 | Target: 75-80%, API-only, $0 | - |
+| 2026-05-28 | Architecture agreed | - |
+| 2026-05-28 | Updated with competitor research | - |
+| 2026-05-29 | **MAJOR: Restored all API models (NOT local)** | neuro/ultimate/model_registry.py |
+| 2026-05-29 | Added 50+ FREE API models with task assignments | neuro/ultimate/model_registry.py |
+| 2026-05-29 | Added fallback chains for all categories | neuro/ultimate/model_registry.py |
+| 2026-05-29 | Gemini: 3-flash-preview, 3.5-flash, 2.5-flash, 1.5-pro, 1.5-flash | neuro/ultimate/model_registry.py |
+| 2026-29-05 | Groq: llama-3.3-70b, llama-3.1-8b, qwen3-32b, mixtral-8x7b | neuro/ultimate/model_registry.py |
+| 2026-05-29 | OpenRouter: DeepSeek V4 Flash, Qwen3 Coder, Llama 3.3 70B, +15 more | neuro/ultimate/model_registry.py |
+| 2026-05-29 | Together AI, Cohere, HuggingFace, Cloudflare models added | neuro/ultimate/model_registry.py |
+| 2026-05-29 | Updated GOAL.md with complete model registry | GOAL.md |
+| 2026-05-29 | Updated INSTRUCTIONS.md with API key setup | INSTRUCTIONS.md |
 
-OTHER:
-- openai/gpt-oss-120b:free
-- openai/gpt-oss-20b:free
-- liquid/lfm-2.5-1.2b-thinking:free
-- poolside/laguna-xs.2:free, poolside/laguna-m.1:free
-- baidu/cobuddy:free
-- z-ai/glm-4.5-air:free
-```
+---
 
-### Other Free Providers
-```
-TOGETHER AI:
-- meta-llama/Llama-3.3-70B-Instruct
-- Qwen/Qwen2.5-Coder-32B-Instruct
-- mistralai/Mistral-7B-Instruct-v0.3
+**Remember: The key to 75-80% is ARCHITECTURE, not raw model power!**
 
-GROQ (Fast inference):
-- llama-3.3-70b-versatile
-- llama-3.1-8b-instant
-- qwen/qwen3-32b
+All models are accessed via API (no local setup required).
 
-COHERE:
-- command-r-plus
-- command-r
+SWE-agent (100 lines) achieves 65% - we can do 75-80% with superior architecture.
 
-HUGGINGFACE:
-- Qwen/Qwen2.5-Coder-32B-Instruct
-- deepseek-ai/DeepSeek-Coder-V2
-- bigcode/starcoder2-15b
+Kimi K2.5 achieves 76.8% with Agent Swarm - WE CAN MATCH THIS with free API models!
 
-CLOUDFLARE:
-- @cf/meta/llama-3-70b-instruct
-- @cf/mistral/mistral-7b-instruct-v0.2
-```
+---
+
+## 📚 REFERENCES
+
+- Kimi K2.5 GitHub: https://github.com/MoonshotAI/Kimi-K2.5
+- SWE-bench Paper: https://arxiv.org/abs/2310.17567
+- SWE-agent: https://github.com/princeton-nlp/SWE-agent
+- OpenRouter Free Models: https://openrouter.ai/models?price=free
+- Google AI Studio: https://aistudio.google.com
+- Groq: https://console.groq.com
+- Together AI: https://api.together.xyz
 
 ---
 

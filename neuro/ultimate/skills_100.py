@@ -3,7 +3,18 @@ Neuro Ultimate 100+ Skills - Complete Auto-Trigger System
 ==========================================================
 The most comprehensive skill integration for AI coding systems.
 All 100+ skills are automatically triggered based on task context.
-Nothing remains unused - everything activates when needed.
+Uses 50+ FREE API models (no local setup required).
+
+API PROVIDERS:
+- Gemini (Google AI): Gemini 2.5 Flash, 3.5 Flash, Flash Preview
+- Groq: llama-3.3-70b, llama-3.1-8b, qwen3-32b
+- OpenRouter: DeepSeek V4 Flash, Qwen3 Coder, Llama 3.3 70B, Gemma 4
+- Together AI: Llama 3.3 70B, Qwen 2.5 Coder 32B
+- Cohere: Command R, Command R+
+- HuggingFace: Qwen 2.5 Coder, DeepSeek Coder V2
+- Cloudflare Workers AI: Llama 3 70B, Mistral 7B
+
+Last Updated: 2026-05-29
 """
 
 from typing import Dict, List, Any, Optional, Callable
