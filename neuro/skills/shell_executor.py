@@ -1,14 +1,25 @@
-# Shell Executor with Self-Healing
-# Executes shell commands, detects errors, auto-fixes, and validates
+# Shell Executor with Self-Healing - Claude Code Level
+# Executes shell commands, detects errors, auto-fixes, validates
+# Features: streaming output, context preservation, sandbox isolation
 
 import subprocess
 import re
 import time
 import os
-from typing import Dict, Any, List, Optional, Tuple
+import sys
+import signal
+import asyncio
+import pty
+import select
+import termios
+import tty
+from typing import Dict, Any, List, Optional, Tuple, Callable, Union
 from dataclasses import dataclass, field
 from enum import Enum
+from concurrent.futures import ThreadPoolExecutor
 import json
+import threading
+
 
 class ErrorSeverity(Enum):
     SYNTAX = "syntax"       # Compilation/parsing errors
@@ -19,6 +30,7 @@ class ErrorSeverity(Enum):
     NETWORK = "network"     # Network/fetch errors
     UNKNOWN = "unknown"
 
+
 @dataclass
 class ShellError:
     """Detected shell error."""
@@ -28,6 +40,7 @@ class ShellError:
     file_hint: Optional[str] = None
     suggestion: Optional[str] = None
     original_command: str = ""
+
 
 @dataclass
 class ExecutionResult:
@@ -40,6 +53,199 @@ class ExecutionResult:
     errors: List[ShellError] = field(default_factory=list)
     fixes_attempted: List[str] = field(default_factory=list)
     validation_passed: bool = False
+    warnings: List[str] = field(default_factory=list)
+
+
+class StreamingOutput:
+    """Streaming output handler for real-time output display."""
+    
+    def __init__(self, callback: Callable[[str], None] = None):
+        self.callback = callback
+        self.buffer = ""
+        self.lines = []
+    
+    def write(self, data: str):
+        """Write data to buffer and optionally call callback."""
+        self.buffer += data
+        if '\n' in data:
+            parts = data.rstrip('\n').split('\n')
+            for part in parts:
+                self.lines.append(part)
+                if self.callback:
+                    self.callback(part)
+    
+    def flush(self):
+        """Flush any remaining data."""
+        if self.buffer and self.callback:
+            self.callback(self.buffer)
+            self.buffer = ""
+
+
+class SandboxExecutor:
+    """
+    Sandboxed shell execution for safe code execution.
+    Isolates code execution with resource limits.
+    """
+    
+    def __init__(self, memory_limit_mb: int = 512, timeout_sec: int = 60,
+                 allowed_commands: List[str] = None):
+        self.memory_limit_mb = memory_limit_mb
+        self.timeout_sec = timeout_sec
+        self.allowed_commands = allowed_commands or [
+            "python", "python3", "node", "npm", "pip", "git", "ls", "cat",
+            "echo", "cd", "pwd", "mkdir", "touch", "cp", "mv", "rm"
+        ]
+    
+    def is_command_allowed(self, command: str) -> bool:
+        """Check if command is in allowed list."""
+        first_word = command.strip().split()[0] if command.strip() else ""
+        return first_word in self.allowed_commands or first_word.startswith("python") or first_word.startswith("node")
+    
+    def execute_sandboxed(self, command: str) -> ExecutionResult:
+        """Execute command in sandboxed environment."""
+        if not self.is_command_allowed(command):
+            return ExecutionResult(
+                success=False,
+                stdout="",
+                stderr=f"Command '{command}' not allowed in sandbox mode",
+                exit_code=-1,
+                duration_ms=0,
+                errors=[ShellError(
+                    severity=ErrorSeverity.PERMISSION,
+                    message="Command not allowed in sandbox",
+                    original_command=command
+                )]
+            )
+        
+        # Set resource limits via ulimit
+        safe_command = f"ulimit -v {self.memory_limit_mb * 1024} && ulimit -t {self.timeout_sec} && {command}"
+        
+        try:
+            result = subprocess.run(
+                safe_command,
+                shell=True,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout_sec + 5
+            )
+            return ExecutionResult(
+                success=result.returncode == 0,
+                stdout=result.stdout,
+                stderr=result.stderr,
+                exit_code=result.returncode,
+                duration_ms=0
+            )
+        except subprocess.TimeoutExpired:
+            return ExecutionResult(
+                success=False,
+                stdout="",
+                stderr=f"Sandbox execution timed out after {self.timeout_sec}s",
+                exit_code=-1,
+                duration_ms=self.timeout_sec * 1000
+            )
+
+
+class InteractiveShell:
+    """
+    Interactive shell session with history and context.
+    Claude Code-level terminal experience.
+    """
+    
+    def __init__(self, working_dir: str = "."):
+        self.working_dir = working_dir
+        self.history: List[str] = []
+        self.env_vars: Dict[str, str] = {}
+        self.last_result: Optional[ExecutionResult] = None
+        self.history_file = os.path.expanduser("~/.neuro_shell_history")
+        self._load_history()
+    
+    def _load_history(self):
+        """Load command history from file."""
+        if os.path.exists(self.history_file):
+            try:
+                with open(self.history_file, 'r') as f:
+                    self.history = [line.strip() for line in f if line.strip()][-1000:]
+            except Exception:
+                pass
+    
+    def _save_history(self):
+        """Save command history to file."""
+        try:
+            with open(self.history_file, 'w') as f:
+                f.write('\n'.join(self.history[-1000:]))
+        except Exception:
+            pass
+    
+    def execute_interactive(self, command: str, 
+                           stream_callback: Callable[[str], None] = None) -> ExecutionResult:
+        """Execute command with optional streaming output."""
+        self.history.append(command)
+        self._save_history()
+        
+        start_time = time.time()
+        stdout_data = []
+        stderr_data = []
+        
+        try:
+            process = subprocess.Popen(
+                command,
+                shell=True,
+                cwd=self.working_dir,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                env={**os.environ, **self.env_vars}
+            )
+            
+            # Stream output
+            import select
+            while True:
+                reads = [process.stdout.fileno(), process.stderr.fileno()]
+                ret = select.select(reads, [], [], 0.1)
+                
+                if process.stdout.fileno() in ret[0]:
+                    line = process.stdout.readline()
+                    if line:
+                        stdout_data.append(line)
+                        if stream_callback:
+                            stream_callback(line)
+                
+                if process.stderr.fileno() in ret[0]:
+                    line = process.stderr.readline()
+                    if line:
+                        stderr_data.append(line)
+                        if stream_callback:
+                            stream_callback(f"[ERR] {line}")
+                
+                if process.poll() is not None:
+                    break
+            
+            # Get remaining output
+            stdout_data.append(process.stdout.read())
+            stderr_data.append(process.stderr.read())
+            
+            duration_ms = (time.time() - start_time) * 1000
+            
+            result = ExecutionResult(
+                success=process.returncode == 0,
+                stdout=''.join(stdout_data),
+                stderr=''.join(stderr_data),
+                exit_code=process.returncode,
+                duration_ms=duration_ms
+            )
+            
+            self.last_result = result
+            return result
+            
+        except Exception as e:
+            return ExecutionResult(
+                success=False,
+                stdout="",
+                stderr=str(e),
+                exit_code=-1,
+                duration_ms=(time.time() - start_time) * 1000
+            )
+
 
 class ShellExecutor:
     """

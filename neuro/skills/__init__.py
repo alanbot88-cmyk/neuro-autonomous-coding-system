@@ -82,6 +82,15 @@ _lazy_imports = {
     "human_collaboration": "neuro.skills.human_collaboration.HumanAgentCollaboration",
     "collaborate": "neuro.skills.human_collaboration.HumanAgentCollaboration",
     "checkpoint": "neuro.skills.human_collaboration.HumanAgentCollaboration",
+    
+    # NEW: Claude Code-level competitive features
+    "git_operations": "neuro.skills.git_operations.GitOperations",
+    "git": "neuro.skills.git_operations.GitOperations",
+    "agent_state_manager": "neuro.skills.agent_state_manager.AgentStateManager",
+    "stream": "neuro.skills.agent_state_manager.AgentStateManager",
+    "state": "neuro.skills.agent_state_manager.AgentStateManager",
+    "context_optimizer": "neuro.skills.context_optimizer.ContextOptimizer",
+    "context": "neuro.skills.context_optimizer.ContextOptimizer",
 }
 
 def _lazy_get_skill(name: str):
@@ -200,20 +209,29 @@ SKILL_REGISTRY: Dict[str, Any] = {
     "asset_mapping": None,
     
     # NEW: Cross-session features
-    "deep_research": None,
-    "research": None,
-    "slide_builder": None,
-    "slides": None,
-    "presentation": None,
-    "document_generator": None,
-    "document": None,
-    "enhanced_browser": None,
-    "form_fill": None,
-    "cross_session_memory": None,
-    "progress_tracker": None,
-    "progress": None,
-    "human_collaboration": None,
-    "collaborate": None,
+    "deep_research": "_LAZY_",  # Will be loaded from deep_research module
+    "research": "_LAZY_",
+    "slide_builder": "_LAZY_",
+    "slides": "_LAZY_",
+    "presentation": "_LAZY_",
+    "document_generator": "_LAZY_",
+    "document": "_LAZY_",
+    "enhanced_browser": "_LAZY_",
+    "form_fill": "_LAZY_",
+    "cross_session_memory": "_LAZY_",
+    "progress_tracker": "_LAZY_",
+    "progress": "_LAZY_",
+    "human_collaboration": "_LAZY_",
+    "collaborate": "_LAZY_",
+    
+    # NEW: Claude Code-level competitive features
+    "git_operations": "_LAZY_",
+    "git": "_LAZY_",
+    "agent_state_manager": "_LAZY_",
+    "stream": "_LAZY_",
+    "state": "_LAZY_",
+    "context_optimizer": "_LAZY_",
+    "context": "_LAZY_",
 }
 
 class SkillManager:
@@ -334,6 +352,27 @@ class SkillManager:
         """Get a specific skill by name"""
         return self.skills.get(name)
     
+    def get_registered_skill(self, name: str):
+        """Get a skill class by name, with lazy loading."""
+        if name in SKILL_REGISTRY:
+            skill_class = SKILL_REGISTRY[name]
+            if skill_class is None or skill_class == "_LAZY_":
+                if name in _lazy_imports:
+                    module_path = _lazy_imports[name]
+                    if module_path and module_path != "_LAZY_":
+                        import importlib
+                        module_name, class_name = module_path.rsplit(".", 1)
+                        try:
+                            module = importlib.import_module(module_name)
+                            skill_class = getattr(module, class_name)
+                            SKILL_REGISTRY[name] = skill_class
+                        except ImportError:
+                            return None
+                    else:
+                        return None
+            return skill_class
+        return None
+    
     def list_skills(self) -> List[Dict[str, Any]]:
         """List all loaded skills"""
         return [
@@ -367,7 +406,23 @@ def invoke_skill(skill_name: str, task: str, context: Optional[Dict[str, Any]] =
     """
     if skill_name in SKILL_REGISTRY:
         skill_class = SKILL_REGISTRY[skill_name]
-        if hasattr(skill_class, 'invoke'):
+        
+        # Lazy load if None or "_LAZY_"
+        if (skill_class is None or skill_class == "_LAZY_") and skill_name in _lazy_imports:
+            import importlib
+            module_path = _lazy_imports[skill_name]
+            if module_path and module_path != "_LAZY_":
+                module_name, class_name = module_path.rsplit(".", 1)
+                try:
+                    module = importlib.import_module(module_name)
+                    skill_class = getattr(module, class_name)
+                    SKILL_REGISTRY[skill_name] = skill_class  # Cache it
+                except ImportError as e:
+                    return {"error": f"Failed to load skill {skill_name}: {e}"}
+            else:
+                return {"error": f"Skill {skill_name} has no lazy import path configured"}
+        
+        if skill_class and hasattr(skill_class, 'invoke'):
             return skill_class.invoke(task, context)
         return {"error": f"Skill {skill_name} does not have an invoke method"}
     
