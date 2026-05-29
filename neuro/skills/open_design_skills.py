@@ -8,17 +8,58 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 class SkillCategory(Enum):
-    """Skill categories matching OpenHands skill structure"""
+    """20+ Skill categories for comprehensive task coverage"""
+    # Core Development (8)
     VERSION_CONTROL = "version_control"
     CODE_QUALITY = "code_quality"
-    FRONTEND = "frontend"
-    DEVOPS = "devops"
-    DATA_ML = "data_ml"
-    COMMUNICATION = "communication"
-    AGENT_SDK = "agent_sdk"
-    META = "meta"
+    CODE_GENERATION = "code_generation"
+    DEBUGGING = "debugging"
+    TESTING = "testing"
+    REFACTORING = "refactoring"
+    DOCUMENTATION = "documentation"
     SECURITY = "security"
+    
+    # Frontend & UI (5)
+    FRONTEND = "frontend"
+    UI_DESIGN = "ui_design"
+    RESPONSIVE_DESIGN = "responsive_design"
+    ANIMATION = "animation"
+    ACCESSIBILITY = "accessibility"
+    
+    # Backend & Data (6)
+    API_DEVELOPMENT = "api_development"
+    DATABASE = "database"
+    DATA_ANALYTICS = "data_analytics"
+    CACHING = "caching"
+    MESSAGE_QUEUE = "message_queue"
+    DATA_SCIENCE = "data_science"
+    
+    # DevOps & Cloud (6)
+    DEVOPS = "devops"
+    CONTAINERIZATION = "containerization"
+    CLOUD_PROVIDERS = "cloud_providers"
+    CI_CD = "ci_cd"
+    INFRASTRUCTURE = "infrastructure"
+    MONITORING = "monitoring"
+    
+    # AI & Agents (5)
+    AGENT_SDK = "agent_sdk"
+    MACHINE_LEARNING = "machine_learning"
+    PROMPT_ENGINEERING = "prompt_engineering"
+    AUTONOMOUS_AI = "autonomous_ai"
+    MULTI_AGENT = "multi_agent"
+    
+    # Communication (4)
+    COMMUNICATION = "communication"
+    PROJECT_MANAGEMENT = "project_management"
+    COLLABORATION = "collaboration"
+    INTEGRATIONS = "integrations"
+    
+    # Meta & Tools (4)
+    META = "meta"
     AUTOMATION = "automation"
+    BUILD_TOOLS = "build_tools"
+    LINTING = "linting"
 
 @dataclass
 class OpenSkill:
@@ -44,8 +85,9 @@ class OpenDesignSkills:
     # Full OpenHands skill catalog (259+ skills)
     SKILL_CATALOG: Dict[str, OpenSkill] = {}
     
-    # Category groupings for efficient lookup
+    # Category groupings for efficient lookup (38 categories)
     CATEGORY_SKILLS: Dict[SkillCategory, List[str]] = {
+        # Core Development (8)
         SkillCategory.VERSION_CONTROL: [
             "github", "github-pr-review", "github-repo-monitor", "iterate",
             "gitlab", "bitbucket", "azure-devops", "ssh"
@@ -54,37 +96,134 @@ class OpenDesignSkills:
             "code-review", "code-simplifier", "add-javadoc", "add-skill",
             "learn-from-code-review", "security", "security-audit"
         ],
+        SkillCategory.CODE_GENERATION: [
+            "code-gen", "scaffold", "boilerplate", "template", "generate"
+        ],
+        SkillCategory.DEBUGGING: [
+            "debug", "stack-trace", "error-fix", "troubleshoot", "profiler"
+        ],
+        SkillCategory.TESTING: [
+            "pytest", "jest", "cypress", "playwright", "testng", "unittest",
+            "integration-testing", "e2e-testing", "qa-changes"
+        ],
+        SkillCategory.REFACTORING: [
+            "refactor", "restructure", "simplify", "cleanup", "technical-debt"
+        ],
+        SkillCategory.DOCUMENTATION: [
+            "readme", "docs", "markdown", "api-docs", "changelog", "release-notes"
+        ],
+        SkillCategory.SECURITY: [
+            "security", "vulnerability", "auth", "encryption", "pen-test",
+            "owasp", "secure-coding", "secret-scan"
+        ],
+        
+        # Frontend & UI (5)
         SkillCategory.FRONTEND: [
-            "frontend-design", "theme-factory", "ui-components", "responsive-design"
+            "react", "vue", "angular", "html", "css", "javascript", "typescript"
         ],
+        SkillCategory.UI_DESIGN: [
+            "ui", "design", "interface", "component", "layout"
+        ],
+        SkillCategory.RESPONSIVE_DESIGN: [
+            "responsive", "mobile", "tablet", "breakpoints", "adaptive"
+        ],
+        SkillCategory.ANIMATION: [
+            "animation", "gsap", "framer-motion", "transition", "keyframes"
+        ],
+        SkillCategory.ACCESSIBILITY: [
+            "a11y", "accessibility", "aria", "screen-reader", "wcag"
+        ],
+        
+        # Backend & Data (6)
+        SkillCategory.API_DEVELOPMENT: [
+            "rest", "graphql", "grpc", "api", "endpoint", "openapi"
+        ],
+        SkillCategory.DATABASE: [
+            "sql", "postgresql", "mysql", "mongodb", "redis", "elasticsearch",
+            "sqlite", "database-design", "migration"
+        ],
+        SkillCategory.DATA_ANALYTICS: [
+            "pandas", "numpy", "jupyter", "analytics", "data-processing",
+            "etl", "data-pipeline"
+        ],
+        SkillCategory.CACHING: [
+            "cache", "redis", "memcached", "varnish", "optimization"
+        ],
+        SkillCategory.MESSAGE_QUEUE: [
+            "kafka", "rabbitmq", "sqs", "sns", "pubsub", "event-driven"
+        ],
+        SkillCategory.DATA_SCIENCE: [
+            "ml", "ai", "tensorflow", "pytorch", "sklearn", "model-training"
+        ],
+        
+        # DevOps & Cloud (6)
         SkillCategory.DEVOPS: [
-            "docker", "kubernetes", "vercel", "azure-devops", "ssh",
-            "deployment", "ci-cd", "infrastructure"
+            "docker", "kubernetes", "ci-cd", "deployment", "infrastructure",
+            "ansible", "terraform", "cloudformation"
         ],
-        SkillCategory.DATA_ML: [
-            "jupyter", "spark-version-upgrade", "datadog", "pandas", "numpy",
-            "data-analysis", "machine-learning", "deep-learning"
+        SkillCategory.CONTAINERIZATION: [
+            "docker", "container", "image", "dockerfile", "docker-compose"
         ],
-        SkillCategory.COMMUNICATION: [
-            "slack-channel-monitor", "discord", "notion", "linear",
-            "email", "teams", "webhook"
+        SkillCategory.CLOUD_PROVIDERS: [
+            "aws", "gcp", "azure", "digitalocean", "heroku", "vercel", "netlify"
         ],
+        SkillCategory.CI_CD: [
+            "github-actions", "gitlab-ci", "jenkins", "circleci", "travis",
+            "pipeline", "build", "deploy"
+        ],
+        SkillCategory.INFRASTRUCTURE: [
+            "infrastructure", "networking", "dns", "load-balancer", "vpc"
+        ],
+        SkillCategory.MONITORING: [
+            "datadog", "prometheus", "grafana", "sentry", "monitoring",
+            "logging", "alerting", "metrics"
+        ],
+        
+        # AI & Agents (5)
         SkillCategory.AGENT_SDK: [
             "openhands-sdk", "agent-sdk-builder", "agent-creator",
             "openhands-api", "tool-creation", "agent-memory"
         ],
-        SkillCategory.META: [
-            "add-skill", "agent-memory", "skill-creator", "release-notes",
-            "skill-creator", "documentation", "testing"
+        SkillCategory.MACHINE_LEARNING: [
+            "ml", "ai", "tensorflow", "pytorch", "huggingface", "mlops"
         ],
-        SkillCategory.SECURITY: [
-            "security", "vulnerability-remediation", "authentication",
-            "encryption", "penetration-testing", "secure-coding"
+        SkillCategory.PROMPT_ENGINEERING: [
+            "prompt", "llm", "chain-of-thought", "few-shot", "cot"
+        ],
+        SkillCategory.AUTONOMOUS_AI: [
+            "autonomous", "agent", "self-improving", "auto-fix", "healing"
+        ],
+        SkillCategory.MULTI_AGENT: [
+            "multi-agent", "orchestration", "agent-swarm", "collaboration"
+        ],
+        
+        # Communication (4)
+        SkillCategory.COMMUNICATION: [
+            "slack", "discord", "teams", "email", "notification"
+        ],
+        SkillCategory.PROJECT_MANAGEMENT: [
+            "linear", "jira", "asana", "task", "issue", "ticket"
+        ],
+        SkillCategory.COLLABORATION: [
+            "github", "pr", "review", "collaborate", "team", "human-in-loop"
+        ],
+        SkillCategory.INTEGRATIONS: [
+            "webhook", "api-integration", "third-party", "service-connector"
+        ],
+        
+        # Meta & Tools (4)
+        SkillCategory.META: [
+            "add-skill", "skill-creator", "documentation", "meta-programming"
         ],
         SkillCategory.AUTOMATION: [
-            "openhands-automation", "cron", "webhook", "scheduled-tasks",
-            "event-driven", "workflow-automation"
-        ]
+            "cron", "scheduled-task", "webhook", "automation", "workflow"
+        ],
+        SkillCategory.BUILD_TOOLS: [
+            "make", "cmake", "gradle", "maven", "npm", "yarn", "pnpm", "pip"
+        ],
+        SkillCategory.LINTING: [
+            "eslint", "prettier", "pylint", "black", "ruff", "formatter"
+        ],
     }
     
     # Flat skill lookup for all 259+ skills
@@ -116,9 +255,9 @@ class OpenDesignSkills:
         "vercel": OpenSkill("vercel", "Vercel deployment", SkillCategory.DEVOPS, ["vercel", "deploy"]),
         
         # Data & ML (20+)
-        "jupyter": OpenSkill("jupyter", "Jupyter notebook operations", SkillCategory.DATA_ML, ["jupyter", "notebook", "data"]),
-        "spark-version-upgrade": OpenSkill("spark-version-upgrade", "Upgrade Apache Spark apps", SkillCategory.DATA_ML, ["spark", "upgrade"]),
-        "datadog": OpenSkill("datadog", "Datadog monitoring and logs", SkillCategory.DATA_ML, ["datadog", "monitoring", "metrics"]),
+        "jupyter": OpenSkill("jupyter", "Jupyter notebook operations", SkillCategory.DATA_ANALYTICS, ["jupyter", "notebook", "data"]),
+        "spark-version-upgrade": OpenSkill("spark-version-upgrade", "Upgrade Apache Spark apps", SkillCategory.DATA_ANALYTICS, ["spark", "upgrade"]),
+        "datadog": OpenSkill("datadog", "Datadog monitoring and logs", SkillCategory.DATA_ANALYTICS, ["datadog", "monitoring", "metrics"]),
         
         # Communication (15+)
         "slack-channel-monitor": OpenSkill("slack-channel-monitor", "Monitor Slack channels", SkillCategory.COMMUNICATION, ["slack", "channel"]),
