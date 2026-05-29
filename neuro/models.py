@@ -44,6 +44,9 @@ APPROVED_MODELS = [
     "openrouter/anthropic/claude-3-haiku:free",
     "openrouter/microsoft phi-4:free",
     
+    # OpenRouter FREE - Additional (2 models)
+    "openrouter/minimax/minimax-m2.5:free",
+    
     # Together AI (5 models)
     "together/llama-3.3-70b-instruct",
     "together/qwen-2.5-72b-instruct",
@@ -188,6 +191,11 @@ TASK_CATEGORIES = {
         "primary": "openrouter/qwen/qwen3-coder:free",
         "fallback": ["together/qwen-2.5-coder-32b-instruct", "huggingface/CodeLlama-70B-Instruct"],
         "description": "Test execution, QA automation"
+    },
+    "office_document_generation": {
+        "primary": "openrouter/minimax/minimax-m2.5:free",
+        "fallback": ["openrouter/meta-llama/llama-3.2-3b-instruct:free", "gemini/gemini-2.5-flash"],
+        "description": "Word docs, Excel, PowerPoint, financial templates"
     },
 }
 
