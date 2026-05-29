@@ -6,11 +6,74 @@ import os
 import time
 import json
 import asyncio
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import threading
+from collections import defaultdict
+
+
+# =============================================================================
+# RATE LIMIT CONFIGURATION
+# =============================================================================
+
+class RateLimitConfig:
+    """Configuration for API rate limits."""
+    DEFAULT_LIMITS = {
+        "gemini": 20,  # requests per minute
+        "groq": 30,
+        "openrouter": 20,
+        "huggingface": 10,
+    }
+    
+    def __init__(self, custom_limits: Dict[str, int] = None):
+        self.limits = {**self.DEFAULT_LIMITS, **(custom_limits or {})}
+        self._request_times: Dict[str, List[float]] = defaultdict(list)
+        self._lock = threading.Lock()
+    
+    def can_make_request(self, provider: str, max_per_minute: int = None) -> bool:
+        """Check if we can make a request without exceeding rate limit."""
+        limit = max_per_minute or self.limits.get(provider, 20)
+        
+        with self._lock:
+            now = time.time()
+            # Remove requests older than 1 minute
+            self._request_times[provider] = [
+                t for t in self._request_times[provider]
+                if now - t < 60
+            ]
+            
+            return len(self._request_times[provider]) < limit
+    
+    def record_request(self, provider: str):
+        """Record that a request was made."""
+        with self._lock:
+            self._request_times[provider].append(time.time())
+    
+    def wait_if_needed(self, provider: str, max_per_minute: int = None):
+        """Wait if we're at the rate limit."""
+        limit = max_per_minute or self.limits.get(provider, 20)
+        
+        with self._lock:
+            now = time.time()
+            # Remove old requests
+            self._request_times[provider] = [
+                t for t in self._request_times[provider]
+                if now - t < 60
+            ]
+            
+            count = len(self._request_times[provider])
+            if count >= limit:
+                # Calculate wait time
+                oldest = self._request_times[provider][0]
+                wait_time = 60 - (now - oldest)
+                if wait_time > 0:
+                    time.sleep(wait_time)
+
+
+# Global rate limit config
+_rate_limiter = RateLimitConfig()
 
 class TaskStatus(Enum):
     PENDING = "pending"
@@ -345,6 +408,235 @@ class MultiAgentOrchestrator:
             return 0.0
         total = sum(e["duration_ms"] for e in self.execution_history)
         return total / len(self.execution_history)
+    
+    def _topological_sort(self, tasks: List[SubTask]) -> List[List[str]]:
+        """
+        Topological sort of tasks based on dependencies.
+        
+        Returns list of groups where tasks in each group can run in parallel,
+        and groups are ordered by dependency.
+        
+        Args:
+            tasks: List of tasks with dependencies
+            
+        Returns:
+            List of task ID groups in execution order
+        """
+        # Build adjacency and in-degree maps
+        in_degree: Dict[str, int] = {t.id: 0 for t in tasks}
+        dependents: Dict[str, Set[str]] = {t.id: set() for t in tasks}
+        
+        for task in tasks:
+            for dep in task.dependencies:
+                if dep in in_degree:
+                    in_degree[task.id] += 1
+                    dependents[dep].add(task.id)
+        
+        # Kahn's algorithm with parallel grouping
+        groups: List[List[str]] = []
+        remaining = set(t.id for t in tasks)
+        
+        while remaining:
+            # Find all tasks with no remaining dependencies
+            ready = [tid for tid in remaining if in_degree[tid] == 0]
+            
+            if not ready:
+                # Circular dependency - break remaining
+                ready = list(remaining)
+            
+            groups.append(ready)
+            
+            # Remove ready tasks and update in-degrees
+            for tid in ready:
+                remaining.remove(tid)
+                for dependent in dependents.get(tid, set()):
+                    if dependent in in_degree:
+                        in_degree[dependent] -= 1
+        
+        return groups
+    
+    async def execute_parallel_subtasks(
+        self,
+        subtasks: List[Dict[str, Any]],
+        executor_func: Callable[[Dict], Any],
+        max_parallel: int = 4
+    ) -> Dict[str, Any]:
+        """
+        Execute subtasks in parallel using asyncio.
+        
+        Groups tasks by dependencies - independent tasks run together.
+        Respects rate limits across providers.
+        
+        Args:
+            subtasks: List of subtask dictionaries with:
+                - id: Unique identifier
+                - description: Task description
+                - dependencies: List of task IDs this depends on
+                - priority: Task priority (higher = more important)
+                - provider: Optional preferred provider
+            executor_func: Async function to execute each subtask
+            max_parallel: Maximum parallel executions
+            
+        Returns:
+            Dict with results, timing, and success/failure info
+        """
+        start_time = time.time()
+        results: Dict[str, Any] = {
+            "task_results": {},
+            "failed_tasks": [],
+            "success": True,
+        }
+        
+        # Convert to SubTask objects
+        tasks = [
+            SubTask(
+                id=st.get("id", f"task_{i}"),
+                description=st.get("description", ""),
+                assigned_agent=st.get("agent", "general"),
+                priority=st.get("priority", 5),
+                dependencies=st.get("dependencies", []),
+            )
+            for i, st in enumerate(subtasks)
+        ]
+        
+        # Get execution order using topological sort
+        execution_groups = self._topological_sort(tasks)
+        
+        if _rate_limiter:
+            _rate_limiter.wait_if_needed("gemini")
+        
+        # Execute each group in parallel
+        semaphore = asyncio.Semaphore(max_parallel)
+        
+        async def execute_with_semaphore(task_id: str, task: SubTask) -> Tuple[str, Any]:
+            async with semaphore:
+                try:
+                    # Check rate limits before execution
+                    result = await executor_func({
+                        "id": task.id,
+                        "description": task.description,
+                        "assigned_agent": task.assigned_agent,
+                        "priority": task.priority,
+                    })
+                    
+                    # Record rate limit usage
+                    if _rate_limiter:
+                        _rate_limiter.record_request("gemini")
+                    
+                    return task_id, {"success": True, "result": result}
+                except Exception as e:
+                    return task_id, {"success": False, "error": str(e)}
+        
+        # Run all groups
+        for group in execution_groups:
+            group_tasks = [t for t in tasks if t.id in group]
+            
+            # Create tasks for this group
+            async_tasks = [
+                execute_with_semaphore(t.id, t)
+                for t in group_tasks
+            ]
+            
+            # Execute group in parallel
+            group_results = await asyncio.gather(*async_tasks)
+            
+            # Process results
+            for task_id, result in group_results:
+                results["task_results"][task_id] = result
+                if not result.get("success"):
+                    results["failed_tasks"].append(task_id)
+                    results["success"] = False
+        
+        results["duration_ms"] = (time.time() - start_time) * 1000
+        results["total_tasks"] = len(subtasks)
+        results["parallel_groups"] = len(execution_groups)
+        
+        return results
+    
+    async def execute_distributed(
+        self,
+        subtasks: List[Dict[str, Any]],
+        executor_func: Callable[[Dict], Any],
+        provider_distribution: Dict[str, float] = None
+    ) -> Dict[str, Any]:
+        """
+        Execute subtasks distributed across multiple providers.
+        
+        Args:
+            subtasks: List of subtask dictionaries
+            executor_func: Async function to execute each subtask
+            provider_distribution: Dict of provider -> weight (for load balancing)
+            
+        Returns:
+            Dict with results and provider usage statistics
+        """
+        provider_distribution = provider_distribution or {
+            "gemini": 0.5,
+            "groq": 0.3,
+            "openrouter": 0.2,
+        }
+        
+        start_time = time.time()
+        results: Dict[str, Any] = {
+            "task_results": {},
+            "failed_tasks": [],
+            "provider_usage": defaultdict(int),
+            "success": True,
+        }
+        
+        # Assign providers based on distribution
+        import random
+        providers = list(provider_distribution.keys())
+        weights = list(provider_distribution.values())
+        
+        for subtask in subtasks:
+            # Assign provider based on weighted random
+            provider = random.choices(providers, weights=weights)[0]
+            subtask["provider"] = provider
+            results["provider_usage"][provider] += 1
+        
+        # Execute with rate limiting per provider
+        semaphores = {
+            provider: asyncio.Semaphore(max(1, int(4 * weight)))
+            for provider, weight in provider_distribution.items()
+        }
+        
+        async def execute_with_provider(task_id: str, task: Dict) -> Tuple[str, Any]:
+            provider = task.get("provider", "gemini")
+            async with semaphores.get(provider, asyncio.Semaphore(1)):
+                try:
+                    # Wait for rate limit
+                    if _rate_limiter:
+                        _rate_limiter.wait_if_needed(provider)
+                    
+                    # Execute
+                    result = await executor_func(task)
+                    _rate_limiter.record_request(provider)
+                    
+                    return task_id, {"success": True, "result": result, "provider": provider}
+                except Exception as e:
+                    return task_id, {"success": False, "error": str(e), "provider": provider}
+        
+        # Execute all tasks
+        tasks = [
+            execute_with_provider(st.get("id", f"task_{i}"), st)
+            for i, st in enumerate(subtasks)
+        ]
+        
+        all_results = await asyncio.gather(*tasks)
+        
+        # Process results
+        for task_id, result in all_results:
+            results["task_results"][task_id] = result
+            if not result.get("success"):
+                results["failed_tasks"].append(task_id)
+                results["success"] = False
+        
+        results["duration_ms"] = (time.time() - start_time) * 1000
+        results["total_tasks"] = len(subtasks)
+        results["provider_usage"] = dict(results["provider_usage"])
+        
+        return results
 
 
 def quick_orchestrate(task: str, context: Dict = None) -> Dict[str, Any]:

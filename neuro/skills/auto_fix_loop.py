@@ -4,9 +4,80 @@
 import subprocess
 import time
 import os
-from typing import Dict, Any, List, Optional, Callable
+import re
+from typing import Dict, Any, List, Optional, Callable, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
+from datetime import datetime
+
+
+# =============================================================================
+# ERROR TAXONOMY
+# =============================================================================
+
+class ErrorType(Enum):
+    """Classification of error types for targeted fixing."""
+    SYNTAX_ERROR = "syntax_error"
+    IMPORT_ERROR = "import_error"
+    TYPE_ERROR = "type_error"
+    ASSERTION_ERROR = "assertion_error"
+    TIMEOUT = "timeout"
+    PERMISSION_ERROR = "permission_error"
+    API_ERROR = "api_error"
+    RUNTIME_ERROR = "runtime_error"
+    CONNECTION_ERROR = "connection_error"
+    CONFIG_ERROR = "config_error"
+    UNKNOWN_ERROR = "unknown_error"
+
+
+@dataclass
+class ErrorDiagnosis:
+    """
+    Diagnosis of an error with classification and details.
+    
+    Attributes:
+        error_type: Classification of the error
+        message: Human-readable error message
+        location: File/line where error occurred (if known)
+        context: Additional context about the error
+        severity: How severe the error is (1-10)
+        patterns: Regex patterns found in error output
+    """
+    error_type: ErrorType
+    message: str
+    location: Optional[str] = None
+    context: Dict[str, Any] = field(default_factory=dict)
+    severity: int = 5
+    patterns: List[str] = field(default_factory=list)
+    
+    def __str__(self) -> str:
+        loc_str = f" at {self.location}" if self.location else ""
+        return f"[{self.error_type.value}] {self.message}{loc_str}"
+
+
+@dataclass
+class FixStrategy:
+    """
+    Strategy for fixing an diagnosed error.
+    
+    Attributes:
+        strategy_type: Type of fix strategy
+        description: Human-readable description
+        commands: Commands to run to apply the fix
+        confidence: How confident we are this will work (0-1)
+        prerequisites: What needs to be in place before applying
+        side_effects: Potential side effects to watch for
+    """
+    strategy_type: str
+    description: str
+    commands: List[str] = field(default_factory=list)
+    confidence: float = 0.5
+    prerequisites: List[str] = field(default_factory=list)
+    side_effects: List[str] = field(default_factory=list)
+    
+    def __str__(self) -> str:
+        return f"{self.strategy_type}: {self.description}"
+
 
 @dataclass
 class FixAttempt:
@@ -292,6 +363,455 @@ class AutoFixLoop:
                 result.tests_passed = True
         
         return result
+
+
+# =============================================================================
+# UPGRADED AUTO-FIX LOOP WITH ENHANCED SELF-HEALING
+# =============================================================================
+
+class UpgradedAutoFixLoop:
+    """
+    Enhanced self-healing loop with intelligent error diagnosis and targeted fixes.
+    
+    Features:
+    - Comprehensive error taxonomy and diagnosis
+    - Targeted fix strategies based on error type
+    - Verification after each fix
+    - Escalation when fixes fail
+    
+    Usage:
+        from neuro.skills.auto_fix_loop import UpgradedAutoFixLoop
+        
+        fixer = UpgradedAutoFixLoop()
+        diagnosis = fixer.diagnose(error_output)
+        fix = fixer.get_targeted_fix(diagnosis)
+        success = fixer.apply_and_verify(fix, test_fn)
+        
+        if not success:
+            escalation = fixer.escalate(all_attempts)
+            print(f"Manual intervention needed: {escalation}")
+    """
+    
+    def __init__(self, max_retries: int = 5, enable_learning: bool = True):
+        self.max_retries = max_retries
+        self.enable_learning = enable_learning
+        self.fix_history: List[Tuple[ErrorDiagnosis, FixStrategy, bool]] = []
+        self.error_patterns: Dict[ErrorType, List[FixStrategy]] = {}
+    
+    def diagnose(self, error_output: str) -> ErrorDiagnosis:
+        """
+        Diagnose an error and classify it according to the error taxonomy.
+        
+        Args:
+            error_output: The raw error output from command execution
+            
+        Returns:
+            ErrorDiagnosis with classified error type and details
+        """
+        error_lower = error_output.lower()
+        
+        # Match against error patterns
+        error_type = ErrorType.UNKNOWN_ERROR
+        location = None
+        context: Dict[str, Any] = {}
+        patterns: List[str] = []
+        severity = 5
+        
+        # SYNTAX_ERROR patterns
+        syntax_patterns = [
+            (r"syntaxerror:?\s*(.+)", 8),
+            (r"syntax error", 7),
+            (r"unexpected token", 7),
+            (r"invalid syntax", 8),
+            (r"eol while scanning", 8),
+            (r"expected '[:;]", 6),
+        ]
+        for pattern, sev in syntax_patterns:
+            match = re.search(pattern, error_lower)
+            if match:
+                error_type = ErrorType.SYNTAX_ERROR
+                severity = sev
+                patterns.append(pattern)
+                break
+        
+        # IMPORT_ERROR patterns
+        if error_type == ErrorType.UNKNOWN_ERROR:
+            import_patterns = [
+                (r"no module named ['\"]([\w.]+)['\"]", 7),
+                (r"modulenotfounderror:? (.+)", 7),
+                (r"cannot find module ['\"]([\w.]+)['\"]", 6),
+                (r"import error", 6),
+                (r"importerror:? (.+)", 6),
+            ]
+            for pattern, sev in import_patterns:
+                match = re.search(pattern, error_lower)
+                if match:
+                    error_type = ErrorType.IMPORT_ERROR
+                    severity = sev
+                    patterns.append(pattern)
+                    if match.groups():
+                        context["missing_module"] = match.group(1)
+                    break
+        
+        # TYPE_ERROR patterns
+        if error_type == ErrorType.UNKNOWN_ERROR:
+            type_patterns = [
+                (r"typeerror:? (.+)", 6),
+                (r"cannot (?:concatenate|add).*str.*int", 7),
+                (r"'(\w+)' (?:object|instance) has no attribute", 5),
+            ]
+            for pattern, sev in type_patterns:
+                match = re.search(pattern, error_lower)
+                if match:
+                    error_type = ErrorType.TYPE_ERROR
+                    severity = sev
+                    patterns.append(pattern)
+                    break
+        
+        # ASSERTION_ERROR patterns
+        if error_type == ErrorType.UNKNOWN_ERROR:
+            if "assertionerror" in error_lower or "assert" in error_lower:
+                error_type = ErrorType.ASSERTION_ERROR
+                severity = 6
+                patterns.append(r"assertionerror")
+        
+        # TIMEOUT patterns
+        if error_type == ErrorType.UNKNOWN_ERROR:
+            timeout_patterns = [
+                (r"timeout:? (.+)", 5),
+                (r"timed out", 5),
+                (r"exceeded.*time", 5),
+                (r"took too long", 4),
+            ]
+            for pattern, sev in timeout_patterns:
+                if re.search(pattern, error_lower):
+                    error_type = ErrorType.TIMEOUT
+                    severity = sev
+                    patterns.append(pattern)
+                    break
+        
+        # PERMISSION_ERROR patterns
+        if error_type == ErrorType.UNKNOWN_ERROR:
+            perm_patterns = [
+                (r"permission denied", 7),
+                (r"permissionerror:? (.+)", 7),
+                (r"eacces", 7),
+                (r"not permitted", 6),
+            ]
+            for pattern, sev in perm_patterns:
+                if re.search(pattern, error_lower):
+                    error_type = ErrorType.PERMISSION_ERROR
+                    severity = sev
+                    patterns.append(pattern)
+                    break
+        
+        # API_ERROR patterns
+        if error_type == ErrorType.UNKNOWN_ERROR:
+            api_patterns = [
+                (r"api[_-]?error", 6),
+                (r"rate limit", 7),
+                (r"401 unauthorized", 8),
+                (r"403 forbidden", 8),
+                (r"404 not found", 5),
+                (r"500 internal server error", 9),
+                (r"502 bad gateway", 9),
+                (r"503 service unavailable", 9),
+                (r"api.*key", 8),
+            ]
+            for pattern, sev in api_patterns:
+                if re.search(pattern, error_lower):
+                    error_type = ErrorType.API_ERROR
+                    severity = sev
+                    patterns.append(pattern)
+                    break
+        
+        # Extract location if available
+        location_patterns = [
+            r"file ['\"](.+?)['\"],? line (\d+)",
+            r"at .+\(([^)]+)\)",
+            r"in (\w+\.py):(\d+)",
+        ]
+        for pattern in location_patterns:
+            match = re.search(pattern, error_output)
+            if match:
+                location = ":".join(match.groups())
+                break
+        
+        # Extract message
+        message = error_output.strip().split('\n')[0] if error_output.strip() else "Unknown error"
+        
+        return ErrorDiagnosis(
+            error_type=error_type,
+            message=message,
+            location=location,
+            context=context,
+            severity=severity,
+            patterns=patterns
+        )
+    
+    def get_targeted_fix(self, diagnosis: ErrorDiagnosis) -> FixStrategy:
+        """
+        Get a targeted fix strategy based on the error diagnosis.
+        
+        Args:
+            diagnosis: The diagnosed error information
+            
+        Returns:
+            FixStrategy with commands and confidence
+        """
+        error_type = diagnosis.error_type
+        
+        # Check for learned patterns first
+        if self.enable_learning and error_type in self.error_patterns:
+            strategies = self.error_patterns[error_type]
+            if strategies:
+                # Return most successful pattern
+                return max(strategies, key=lambda s: s.confidence)
+        
+        # Define fix strategies by error type
+        if error_type == ErrorType.IMPORT_ERROR:
+            missing_module = diagnosis.context.get("missing_module")
+            if missing_module:
+                return FixStrategy(
+                    strategy_type="install_dependency",
+                    description=f"Install missing module: {missing_module}",
+                    commands=[
+                        f"pip install {missing_module}",
+                        f"pip install {missing_module} --upgrade"
+                    ],
+                    confidence=0.9,
+                    prerequisites=["pip available"],
+                    side_effects=["May install outdated version"]
+                )
+            return FixStrategy(
+                strategy_type="install_all_deps",
+                description="Install all project dependencies",
+                commands=["pip install -r requirements.txt", "pip install -e ."],
+                confidence=0.6
+            )
+        
+        elif error_type == ErrorType.SYNTAX_ERROR:
+            return FixStrategy(
+                strategy_type="syntax_review",
+                description="Syntax error detected - manual review required",
+                commands=[],
+                confidence=0.0,
+                side_effects=["Cannot auto-fix syntax errors"]
+            )
+        
+        elif error_type == ErrorType.TYPE_ERROR:
+            return FixStrategy(
+                strategy_type="type_fix",
+                description="Type error detected - check type conversions",
+                commands=[
+                    "python -m py_compile",
+                    "mypy" if _check_command("mypy") else None
+                ],
+                confidence=0.4,
+                prerequisites=["Python type hints"]
+            )
+        
+        elif error_type == ErrorType.ASSERTION_ERROR:
+            return FixStrategy(
+                strategy_type="assertion_review",
+                description="Assertion failed - verify expected conditions",
+                commands=["pytest -v"],
+                confidence=0.5,
+                prerequisites=["Tests defined"]
+            )
+        
+        elif error_type == ErrorType.TIMEOUT:
+            return FixStrategy(
+                strategy_type="timeout_increase",
+                description="Timeout error - increase timeout or optimize",
+                commands=[
+                    "export PYTHON_TIMEOUT=300",
+                    "ulimit -v unlimited"
+                ],
+                confidence=0.6,
+                side_effects=["May mask performance issues"]
+            )
+        
+        elif error_type == ErrorType.PERMISSION_ERROR:
+            location = diagnosis.location or ""
+            return FixStrategy(
+                strategy_type="fix_permissions",
+                description=f"Fix file permissions for {location}",
+                commands=[
+                    f"chmod +x {location}" if location else None,
+                    "sudo chown -R $USER:$USER ."
+                ],
+                confidence=0.8,
+                side_effects=["Changes file ownership"]
+            )
+        
+        elif error_type == ErrorType.API_ERROR:
+            if "rate limit" in diagnosis.message.lower():
+                return FixStrategy(
+                    strategy_type="rate_limit_wait",
+                    description="Rate limited - wait and retry",
+                    commands=["sleep 60"],
+                    confidence=0.7,
+                    side_effects=["Adds delay"]
+                )
+            return FixStrategy(
+                strategy_type="api_config_review",
+                description="API error - review configuration",
+                commands=[".env check", "API_KEY validation"],
+                confidence=0.5
+            )
+        
+        else:
+            return FixStrategy(
+                strategy_type="general_troubleshoot",
+                description="Unknown error - general troubleshooting",
+                commands=["pip install --upgrade pip", "python -m pip install --upgrade setuptools"],
+                confidence=0.3
+            )
+    
+    def apply_and_verify(
+        self,
+        fix: FixStrategy,
+        test_fn: Optional[Callable[[], bool]] = None,
+        apply_fn: Optional[Callable[[str], bool]] = None
+    ) -> bool:
+        """
+        Apply a fix and verify it works.
+        
+        Args:
+            fix: The fix strategy to apply
+            test_fn: Optional function to test if fix works
+            
+        Returns:
+            True if fix was successful, False otherwise
+        """
+        if not fix.commands:
+            return False
+        
+        # Try each command in the fix strategy
+        for command in fix.commands:
+            if not command:
+                continue
+                
+            print(f"   🔧 Applying: {command}")
+            
+            if apply_fn:
+                success = apply_fn(command)
+            else:
+                # Default: run command
+                result = subprocess.run(
+                    command,
+                    shell=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+                success = result.returncode == 0
+                
+                if not success:
+                    print(f"      ❌ Command failed: {result.stderr[:100]}")
+            
+            if success:
+                print(f"      ✅ Command succeeded")
+                
+                # Verify with test function if provided
+                if test_fn:
+                    print(f"   🔍 Verifying with test function...")
+                    if test_fn():
+                        print(f"      ✅ Verification passed")
+                        return True
+                    else:
+                        print(f"      ❌ Verification failed")
+                        continue
+                else:
+                    return True
+        
+        return False
+    
+    def escalate(self, all_attempts: List[Tuple[ErrorDiagnosis, FixStrategy, bool]]) -> str:
+        """
+        Generate escalation message when all automated fixes have failed.
+        
+        Args:
+            all_attempts: List of (diagnosis, fix, success) tuples
+            
+        Returns:
+            Escalation message with diagnostic information
+        """
+        failed_diagnoses = [d for d, _, success in all_attempts if not success]
+        
+        if not failed_diagnoses:
+            return "No failed attempts to escalate"
+        
+        # Group by error type
+        error_counts: Dict[ErrorType, int] = {}
+        for diag in failed_diagnoses:
+            error_counts[diag.error_type] = error_counts.get(diag.error_type, 0) + 1
+        
+        most_common = max(error_counts, key=error_counts.get)
+        
+        # Generate escalation message
+        escalation = [
+            "=" * 50,
+            "ESCALATION: Manual intervention required",
+            "=" * 50,
+            f"Total failed attempts: {len(all_attempts)}",
+            f"Most common error: {most_common.value}",
+            f"Severity: {failed_diagnoses[0].severity}/10",
+            "",
+            "Failed error types:",
+        ]
+        
+        for error_type, count in sorted(error_counts.items(), key=lambda x: -x[1]):
+            escalation.append(f"  - {error_type.value}: {count} occurrence(s)")
+        
+        if failed_diagnoses[0].location:
+            escalation.append(f"\nError locations: {failed_diagnoses[0].location}")
+        
+        escalation.extend([
+            "",
+            "Last error message:",
+            failed_diagnoses[-1].message[:200],
+            "=" * 50,
+        ])
+        
+        return "\n".join(escalation)
+    
+    def record_fix_attempt(
+        self,
+        diagnosis: ErrorDiagnosis,
+        fix: FixStrategy,
+        success: bool
+    ):
+        """
+        Record a fix attempt for learning.
+        
+        Args:
+            diagnosis: The error diagnosis
+            fix: The fix strategy used
+            success: Whether the fix worked
+        """
+        self.fix_history.append((diagnosis, fix, success))
+        
+        # Learn from successful fixes
+        if success and self.enable_learning:
+            error_type = diagnosis.error_type
+            if error_type not in self.error_patterns:
+                self.error_patterns[error_type] = []
+            
+            # Update confidence based on success
+            fix.confidence = min(1.0, fix.confidence + 0.1)
+            
+            # Add to patterns if not already present
+            existing = [s.description for s in self.error_patterns[error_type]]
+            if fix.description not in existing:
+                self.error_patterns[error_type].append(fix)
+
+
+def _check_command(cmd: str) -> bool:
+    """Check if a command is available."""
+    result = subprocess.run(f"which {cmd}", shell=True, capture_output=True)
+    return result.returncode == 0
 
 
 def quick_fix(command: str, max_iterations: int = 5) -> Dict[str, Any]:

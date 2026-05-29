@@ -1,6 +1,12 @@
 """
 Neuro CLI - Command-line interface for the Neuro Autonomous Agent
 Usage: python -m neuro --goal "task description"
+
+Shows full agent loop with all 4 roles visible:
+  - Planner: Breaks down tasks
+  - Coder: Implements solutions
+  - Reviewer: Checks quality
+  - Executor: Runs and tests
 """
 
 import sys
@@ -25,8 +31,15 @@ Examples:
   python -m neuro --mode enterprise --goal "Build a SaaS app"
   python -m neuro --mode debug --goal "Fix this app until it runs"
   python -m neuro --mode website --goal "Create a landing page"
-  python -m neuro --mode deploy --goal "Deploy to Vercel"
   python -m neuro --dry-run -v
+  
+  # With scenario routing
+  python -m neuro --scenario bug_fix --goal "Fix the login error"
+  python -m neuro --scenario web_app --goal "Build a dashboard"
+  
+  # With parallel execution
+  python -m neuro --max-steps 100 --goal "Build full-stack app"
+  python -m neuro --no-parallel --goal "Sequential build"
   
 Working Modes:
   auto        - Auto-detect mode from goal
@@ -37,7 +50,21 @@ Working Modes:
   api        - Build API services
   refactor   - Refactor existing code
   deploy     - Deploy applications
-  
+
+Scenario Handlers:
+  bug_fix       - diagnose-fix-verify approach
+  new_feature   - plan-implement-test approach
+  refactor      - analyze-plan-execute-verify approach
+  web_app       - design-backend-frontend-integrate-test approach
+  api_build     - design-schema-implement-document approach
+  data_pipeline - analyze-design-implement-validate approach
+  code_review   - analyze-identify-suggest approach
+  research_task - gather-analyze-summarize approach
+  long_horizon  - milestone-track-iterate approach
+  enterprise_app - architecture-design-implement-test-deploy approach
+  mobile_app    - design-implement-test-package approach
+  presentation  - outline-design-build-refine approach
+
 Environment Variables:
   GROQ_API_KEYS - Groq API key (free tier)
   OPENROUTER_API_KEYS - OpenRouter API key (free tier)
@@ -90,6 +117,50 @@ Environment Variables:
         help="Model temperature (default: 0.1)"
     )
     
+    # =========================================================================
+    # NEW SECTION 10 FLAGS
+    # =========================================================================
+    
+    parser.add_argument(
+        "--scenario",
+        default=None,
+        choices=[
+            "bug_fix", "new_feature", "refactor", "web_app", "api_build",
+            "data_pipeline", "code_review", "research_task", "long_horizon",
+            "enterprise_app", "mobile_app", "presentation"
+        ],
+        help="Force specific scenario handler (skip auto-detection)"
+    )
+    
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=None,
+        help="Show plan without executing"
+    )
+    
+    parser.add_argument(
+        "--no-parallel",
+        action="store_true",
+        help="Disable parallel execution"
+    )
+    
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Show all agent communications"
+    )
+    
+    parser.add_argument(
+        "--json-output",
+        metavar="FILE",
+        help="Save results to JSON file"
+    )
+    
+    # =========================================================================
+    # EXISTING FLAGS (preserved for compatibility)
+    # =========================================================================
+    
     parser.add_argument(
         "--no-test-first",
         action="store_true",
@@ -109,13 +180,6 @@ Environment Variables:
     )
     
     parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        default=True,
-        help="Preview changes without applying (default: True)"
-    )
-    
-    parser.add_argument(
         "--apply",
         action="store_true",
         help="Actually apply changes (disables dry-run)"
@@ -125,18 +189,6 @@ Environment Variables:
         "--confirm",
         action="store_true",
         help="Confirm before applying changes"
-    )
-    
-    parser.add_argument(
-        "--json-output",
-        metavar="FILE",
-        help="Output result as JSON to file"
-    )
-    
-    parser.add_argument(
-        "-v", "--verbose",
-        action="store_true",
-        help="Verbose output"
     )
     
     parser.add_argument(
@@ -171,29 +223,27 @@ Environment Variables:
         print("Neuro Autonomous Agent v2.0.0")
         print("Target: Enterprise App Builder")
         print("Modes: enterprise, website, debug, deploy, etc.")
+        print("Scenarios: bug_fix, web_app, api_build, etc.")
         print("Using free API providers")
         return 0
     
     # Health check
     if args.health:
-        from neuro.router.smart_router import health_check
-        health = health_check()
+        from neuro.router import available_providers
+        providers = available_providers()
         print("API Provider Health:")
-        for provider, status in health.items():
-            key_status = "✓" if status["has_key"] else "✗"
-            healthy = "✓" if status["available"] else "✗"
-            cooldown = " (cooldown)" if status["in_cooldown"] else ""
-            print(f"  {provider}: {healthy} available, {key_status} key {cooldown}")
+        for provider, count in providers.items():
+            status = "✓" if count > 0 else "✗"
+            print(f"  {provider}: {status} ({count} keys)")
         return 0
     
     # Stats
     if args.stats:
-        from neuro.router.smart_router import get_stats
-        stats = get_stats()
+        from neuro.router import available_providers
+        providers = available_providers()
         print("Router Statistics:")
-        print(f"  Total calls: {stats['total_calls']}")
-        for provider, count in stats.get("provider_calls", {}).items():
-            print(f"  {provider}: {count} calls")
+        for provider, count in providers.items():
+            print(f"  {provider}: {count} key(s)")
         return 0
     
     # Check for API keys
@@ -216,14 +266,57 @@ Environment Variables:
         print("  OpenRouter: https://openrouter.ai/keys", file=sys.stderr)
         print("  HuggingFace: https://huggingface.co/settings/inference-tokens", file=sys.stderr)
     
-    # Create and run agent
-    dry_run = not args.apply
+    # Determine dry_run mode
+    if args.apply:
+        dry_run = False
+    elif args.dry_run is not None:
+        dry_run = args.dry_run
+    else:
+        dry_run = True  # Default to dry-run
     
-    if args.verbose:
-        print(f"🚀 Neuro Agent")
-        print(f"   Goal: {args.goal}")
-        print(f"   Working dir: {args.working_dir}")
-        print(f"   Dry run: {dry_run}")
+    # Show startup info
+    if args.verbose or args.goal:
+        print()
+        print("╔══════════════════════════════════════════════════════════╗")
+        print("║          NEURO AUTONOMOUS AGENT v2.0.0                   ║")
+        print("╠══════════════════════════════════════════════════════════╣")
+        print(f"║ Goal: {args.goal[:50]}{'...' if args.goal and len(args.goal) > 50 else '':<52}║")
+        print(f"║ Working Dir: {args.working_dir:<48}║")
+        print(f"║ Max Steps: {args.max_steps:<48}║")
+        print(f"║ Dry Run: {str(dry_run):<48}║")
+        if args.scenario:
+            print(f"║ Scenario: {args.scenario:<47}║")
+        if args.no_parallel:
+            print(f"║ Parallel: DISABLED                                      ║")
+        print("╠══════════════════════════════════════════════════════════╣")
+        print("║  4-ROLE AGENT LOOP                                       ║")
+        print("║  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐        ║")
+        print("║  │PLANNER  │→│ CODER   │→│REVIEWER │→│EXECUTOR │        ║")
+        print("║  │ Analyze │ │Implement│ │Quality  │ │Run &    │        ║")
+        print("║  │ Break   │ │Code     │ │Check    │ │Test     │        ║")
+        print("║  └─────────┘ └─────────┘ └─────────┘ └─────────┘        ║")
+        print("╚══════════════════════════════════════════════════════════╝")
+        print()
+    
+    # Show scenario routing info if specified
+    if args.scenario:
+        try:
+            from neuro.router.scenario_router import ScenarioRouter, ScenarioType
+            router = ScenarioRouter()
+            scenario = ScenarioType(args.scenario)
+            handler = router.get_handler(scenario)
+            print(f"📋 Scenario: {args.scenario}")
+            print(f"   Approach: {handler.approach}")
+            print(f"   Tools: {', '.join(handler.tools)}")
+            print(f"   Primary Model: {handler.model_primary}")
+            print()
+        except Exception as e:
+            print(f"⚠️  Scenario routing error: {e}")
+            print()
+    
+    # Show dry-run notice
+    if dry_run:
+        print("🔍 DRY-RUN MODE: Showing plan without executing")
         print()
     
     try:
@@ -243,29 +336,28 @@ Environment Variables:
         result = agent.run()
         
         # Output
-        if args.verbose or not args.json_output:
-            print()
-            print("=" * 60)
-            print("RESULT")
-            print("=" * 60)
-            print(f"Success: {result.success}")
-            print(f"Status: {result.status}")
-            print(f"Steps: {result.steps}")
-            print(f"Passes: {result.passes_used}")
-            print(f"Duration: {result.duration_ms/1000:.1f}s")
-            
-            if result.files_changed:
-                print(f"Files changed: {', '.join(result.files_changed)}")
-            
-            if result.error:
-                print(f"Error: {result.error}")
-            
-            if result.validation_passed:
-                print("Validation: PASSED ✓")
-            else:
-                print("Validation: FAILED ✗")
-            
-            print("=" * 60)
+        print()
+        print("═" * 60)
+        print("RESULT")
+        print("═" * 60)
+        print(f"Success: {result.success}")
+        print(f"Status: {result.status}")
+        print(f"Steps: {result.steps}")
+        print(f"Passes: {result.passes_used}")
+        print(f"Duration: {result.duration_ms/1000:.1f}s")
+        
+        if result.files_changed:
+            print(f"Files changed: {', '.join(result.files_changed)}")
+        
+        if result.error:
+            print(f"Error: {result.error}")
+        
+        if result.validation_passed:
+            print("Validation: PASSED ✓")
+        else:
+            print("Validation: FAILED ✗")
+        
+        print("═" * 60)
         
         # JSON output
         if args.json_output:
@@ -287,8 +379,7 @@ Environment Variables:
             with open(args.json_output, 'w') as f:
                 json.dump(output, f, indent=2)
             
-            if args.verbose:
-                print(f"\n📄 JSON output: {args.json_output}")
+            print(f"\n📄 JSON output saved: {args.json_output}")
         
         return 0 if result.success else 1
         
